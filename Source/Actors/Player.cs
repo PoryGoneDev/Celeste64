@@ -396,7 +396,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
         {
             if (Game.Instance.ArchipelagoManager.ItemQueue.Count == 0 && Game.Instance.ArchipelagoManager.DeathLinkData != null)
             {
-				Kill(true);
+				Kill(false);
 
                 Game.Instance.ArchipelagoManager.ClearDeathLink();
             }
@@ -847,7 +847,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 	}
 
-	public void Kill(bool sendDeath = false)
+	public void Kill(bool sendDeath = true)
 	{
 		stateMachine.State = States.Dead;
 		storedCameraForward = cameraTargetForward;
