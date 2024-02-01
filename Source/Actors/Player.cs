@@ -383,8 +383,25 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 						pickup.Pickup(this);
 				}
 			}
-		}
-	}
+        }
+
+        // DeathLink Handling
+        if (stateMachine.State != States.StrawbGet &&
+			stateMachine.State != States.Bubble &&
+			stateMachine.State != States.Cutscene &&
+			stateMachine.State != States.StrawbReveal &&
+			stateMachine.State != States.Dead &&
+            stateMachine.State != States.Cassette &&
+            stateMachine.State != States.Respawn)
+        {
+            if (Game.Instance.ArchipelagoManager.ItemQueue.Count == 0 && Game.Instance.ArchipelagoManager.DeathLinkData != null)
+            {
+				Kill(true);
+
+                Game.Instance.ArchipelagoManager.ClearDeathLink();
+            }
+        }
+    }
 
 	public override void LateUpdate()
 	{
@@ -830,13 +847,20 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 	}
 
-	public void Kill()
+	public void Kill(bool sendDeath = false)
 	{
 		stateMachine.State = States.Dead;
 		storedCameraForward = cameraTargetForward;
 		storedCameraDistance = cameraTargetDistance;
 		Save.CurrentRecord.Deaths++;
 		Dead = true;
+
+		if (sendDeath)
+		{
+			Game.Instance.ArchipelagoManager.SendDeathLinkIfEnabled("couldn't climb the mountain");
+
+            Game.Instance.ArchipelagoManager.ClearDeathLink();
+        }
 	}
 
 	private bool ClimbCheckAt(Vec3 offset, out WallHit hit)

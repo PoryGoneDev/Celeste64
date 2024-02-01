@@ -64,7 +64,11 @@ public class Game : Module
 	public AudioHandle Ambience;
 	public AudioHandle Music;
 
-	public Game()
+
+    public ArchipelagoManager ArchipelagoManager { get; set; }
+
+
+    public Game()
 	{
 		// If this isn't stored, the delegate will get GC'd and everything will crash :)
 		audioEventCallback = MusicTimelineCallback;
@@ -83,12 +87,15 @@ public class Game : Module
 		scenes.Push(new Startup());
 
         // Archipelago
-		var session = ArchipelagoSessionFactory.CreateSession("localhost", 38281);
-        LoginResult result = session.TryConnectAndLogin("Celeste 64", "Pory", ItemsHandlingFlags.AllItems);
+        ArchipelagoManager = new ArchipelagoManager(new()
+        {
+            Url = "localhost:38281",
+            SlotName = "Pory",
+            Password = "",
+        });
 
-        var loginSuccess = (LoginSuccessful)result;
-
-        if (loginSuccess is not null)
+        var result = ArchipelagoManager.TryConnect().Result;
+        if (result != null)
         {
             Log.Info("Login Success");
         }
