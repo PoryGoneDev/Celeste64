@@ -1,4 +1,6 @@
-﻿using System.Diagnostics;
+﻿using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Celeste64;
@@ -79,7 +81,19 @@ public class Game : Module
 		Controls.Load();
 
 		scenes.Push(new Startup());
-	}
+
+        // Archipelago
+		var session = ArchipelagoSessionFactory.CreateSession("localhost", 38281);
+        LoginResult result = session.TryConnectAndLogin("Celeste 64", "Pory", ItemsHandlingFlags.AllItems);
+
+        var loginSuccess = (LoginSuccessful)result;
+
+        if (loginSuccess is not null)
+        {
+            Log.Info("Login Success");
+        }
+		// End Archipelago
+    }
 
 	public override void Shutdown()
 	{

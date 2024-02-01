@@ -1,5 +1,4 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
-
+﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFramework>net8.0</TargetFramework>
@@ -10,24 +9,23 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>x64</Platforms>
+    <FileUpgradeFlags>40</FileUpgradeFlags>
+    <UpgradeBackupLocation>C:\Users\Andrew\Documents\RandoDev\Celeste64\Backup1\</UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
   </PropertyGroup>
-
   <ItemGroup>
+    <PackageReference Include="Archipelago.MultiClient.Net" Version="5.0.6" />
     <PackageReference Include="FosterFramework" Version="0.1.14-alpha" />
     <PackageReference Include="SharpGLTF.Runtime" Version="1.0.0-alpha0031" />
     <PackageReference Include="Sledge.Formats.Map" Version="1.1.5" />
   </ItemGroup>
-
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Linux'))">
     <Content Include="Source/Audio/FMOD/libs/lib64/**" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
   </ItemGroup>
-
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('Windows'))">
     <Content Include="Source/Audio/FMOD/libs/x64/**" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
   </ItemGroup>
-
   <ItemGroup Condition="$([MSBuild]::IsOSPlatform('OSX'))">
     <Content Include="Source/Audio/FMOD/libs/osx/**" CopyToOutputDirectory="PreserveNewest" Link="%(Filename)%(Extension)" />
   </ItemGroup>
-
 </Project>
