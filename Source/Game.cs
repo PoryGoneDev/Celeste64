@@ -66,7 +66,10 @@ public class Game : App
 	public AudioHandle Music;
 	public Controls Controls;
 
-	public Game(AppConfig config) : base(config)
+    public ArchipelagoManager ArchipelagoManager { get; set; }
+
+
+    public Game(AppConfig config) : base(config)
 	{
 		target = new(GraphicsDevice, Width, Height, [TextureFormat.Color, TextureFormat.Depth16]);
 		batcher = new(GraphicsDevice);
@@ -85,12 +88,15 @@ public class Game : App
 		scenes.Push(new Startup());
 
         // Archipelago
-		var session = ArchipelagoSessionFactory.CreateSession("localhost", 38281);
-        LoginResult result = session.TryConnectAndLogin("Celeste 64", "Pory", ItemsHandlingFlags.AllItems);
+        ArchipelagoManager = new ArchipelagoManager(new()
+        {
+            Url = "localhost:38281",
+            SlotName = "Pory",
+            Password = "",
+        });
 
-        var loginSuccess = (LoginSuccessful)result;
-
-        if (loginSuccess is not null)
+        var result = ArchipelagoManager.TryConnect().Result;
+        if (result != null)
         {
             Log.Info("Login Success");
         }
