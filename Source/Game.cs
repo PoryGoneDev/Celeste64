@@ -368,9 +368,9 @@ public class Game : Module
             Log.Info("Check Received");
 
             if (item.Item == 0xCA0000)
-			{
-				// Strawberry
-			}
+            {
+                Save.CurrentRecord.IncFlag("Strawberries");
+            }
 			else if (item.Item == 0xCA0001)
 			{
 				Save.CurrentRecord.SetFlag("DashRefill");
