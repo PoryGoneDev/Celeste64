@@ -30,7 +30,7 @@ public class Overworld : Scene
 			{
 				Menu.Add(new Menu.Option(Loc.Str("Continue")));
 				Menu.Add(new Menu.Option(Loc.Str("Restart")));
-				Complete = record.Strawberries.Count >= Level.Strawberries;
+				Complete = record.GetFlag("Strawberries") >= Level.Strawberries;
 			}
 			else
 			{
@@ -86,7 +86,7 @@ public class Overworld : Scene
 
 					if (Save.Instance.TryGetRecord(Level.ID) is { } record)
 					{
-						strawbs = record.Strawberries.Count;
+						strawbs = record.GetFlag("Strawberries");
 						deaths = record.Deaths;
 						time = record.Time;
 					}
