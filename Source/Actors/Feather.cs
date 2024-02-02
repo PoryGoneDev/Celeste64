@@ -40,8 +40,27 @@ public class Feather : Actor, IHaveModels, IHaveSprites, IPickup, ICastPointShad
 	}
 
 	public override void Update()
-	{
-		if (tCooldown > 0)
+    {
+        if (Save.CurrentRecord.GetFlag("Feather") == 0)
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0x10;
+                mat.Color = newColor;
+            }
+        }
+        else
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0xFF;
+                mat.Color = newColor;
+            }
+        }
+
+        if (tCooldown > 0)
 		{
 			tCooldown -= Time.Delta;
 			if (tCooldown <= 0)
@@ -61,6 +80,11 @@ public class Feather : Actor, IHaveModels, IHaveSprites, IPickup, ICastPointShad
 
 	public void Pickup(Player player)
 	{
+		if (Save.CurrentRecord.GetFlag("Feather") == 0)
+		{
+			return;
+		}
+
 		if (tCooldown <= 0)
 		{
 			tCooldown = 1.5f;

@@ -8,6 +8,7 @@ using Archipelago.MultiClient.Net.Helpers;
 using Archipelago.MultiClient.Net.Packets;
 using System.Text;
 using Archipelago.MultiClient.Net.Models;
+using System.Diagnostics;
 
 namespace Celeste64;
 
@@ -36,7 +37,7 @@ public class ArchipelagoManager
     public DeathLink? DeathLinkData { get; private set; }
     public bool IsDeathLinkSafe { get; set; }
     public bool Ready { get; private set; }
-    public Queue<Tuple<int, NetworkItem>> ItemQueue { get; private set; } = new();
+    public List<Tuple<int, NetworkItem>> ItemQueue { get; private set; } = new();
     public Dictionary<long, NetworkItem> LocationDictionary { get; private set; } = new();
     public List<Tuple<JsonMessageType, JsonMessagePart[]>> ChatLog { get; } = new();
 
@@ -241,7 +242,8 @@ public class ArchipelagoManager
         var i = helper.Index;
         while (helper.Any())
         {
-            ItemQueue.Enqueue(new(i++, helper.DequeueItem()));
+            Log.Info("Append Item");
+            ItemQueue.Add(new(i++, helper.DequeueItem()));
         }
     }
 

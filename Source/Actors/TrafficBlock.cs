@@ -30,10 +30,15 @@ public class TrafficBlock(Vec3 end) : Solid
 	}
 
 	private CoEnumerator Sequence()
-	{
-		while (true)
-		{
-			while (!HasPlayerRider())
+    {
+        while (true)
+        {
+            while (Save.CurrentRecord.GetFlag("TrafficBlock") == 0)
+            {
+                yield return Co.SingleFrame;
+            }
+
+            while (!HasPlayerRider())
 				yield return Co.SingleFrame;
 
 			Audio.Play(Sfx.sfx_zipmover_start, Position);

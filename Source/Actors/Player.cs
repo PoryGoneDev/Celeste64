@@ -394,7 +394,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
             stateMachine.State != States.Cassette &&
             stateMachine.State != States.Respawn)
         {
-            if (Game.Instance.ArchipelagoManager.ItemQueue.Count == 0 && Game.Instance.ArchipelagoManager.DeathLinkData != null)
+            if (Game.Instance.ArchipelagoManager.DeathLinkData != null)
             {
 				Kill(false);
 
@@ -923,7 +923,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private void BreakBlock(BreakBlock block, Vec3 direction)
 	{
-		World.HitStun = 0.1f;
+        if (Save.CurrentRecord.GetFlag("Breakables") == 0)
+        {
+            return;
+        }
+
+        World.HitStun = 0.1f;
 		block.Break(direction);
 
 		if (block.BouncesPlayer)

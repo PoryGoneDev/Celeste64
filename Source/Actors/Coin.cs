@@ -20,9 +20,31 @@ public sealed class Coin : Actor, IHaveModels, IHaveSprites, IPickup, ICastPoint
 			mat.Color = inactiveColor;
 		PointShadowAlpha = 1.0f;
 		LocalBounds = new BoundingBox(Vec3.Zero, 16);
+    }
+
+	public override void Update()
+	{
+		if (Save.CurrentRecord.GetFlag("Coin") == 0)
+        {
+            foreach (var mat in Model.Materials)
+			{
+				var newColor = mat.Color;
+				newColor.A = 0x30;
+                mat.Color = newColor;
+			}
+		}
+		else
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0xFF;
+                mat.Color = newColor;
+            }
+        }
 	}
 
-	public void CollectSprites(List<Sprite> populate)
+    public void CollectSprites(List<Sprite> populate)
 	{
 		if (!Collected)
 		{
@@ -50,8 +72,13 @@ public sealed class Coin : Actor, IHaveModels, IHaveSprites, IPickup, ICastPoint
     }
 
 	public void Pickup(Player player)
-	{
-		if (!Collected)
+    {
+        if (Save.CurrentRecord.GetFlag("Coin") == 0)
+        {
+            return;
+        }
+
+        if (!Collected)
 		{
 			Collected = true;
 			if (!AnyRemaining(World))
