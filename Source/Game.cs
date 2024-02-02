@@ -338,6 +338,7 @@ public class Game : App
         if (scene is Celeste64.World)
 		{
             CheckReceivedItemQueue();
+            CheckLocationsToSend();
         }
 	}
 
@@ -427,4 +428,19 @@ public class Game : App
 			Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
         }
     }
+
+	public void CheckLocationsToSend()
+	{
+		List<long> locationsToCheck = new List<long>();
+		foreach (var strawbID in Save.CurrentRecord.Strawberries)
+		{
+			long locationID = ArchipelagoManager.LocationStringToID[strawbID];
+			if (!ArchipelagoManager.SentLocations.Contains(locationID))
+			{
+				locationsToCheck.Add(locationID);
+			}
+        }
+
+        ArchipelagoManager.CheckLocations(locationsToCheck.ToArray());
+	}
 }
