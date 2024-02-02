@@ -49,8 +49,51 @@ public class Refill : Actor, IHaveSprites, IPickup, IHaveModels, ICastPointShado
 	}
 
 	public override void Update()
-	{
-		if (tCooldown > 0)
+    {
+        if (IsDouble)
+        {
+            if (Save.CurrentRecord.GetFlag("DoubleDashRefill") == 0)
+            {
+                foreach (var mat in Model.Materials)
+                {
+                    var newColor = mat.Color;
+                    newColor.A = 0x28;
+                    mat.Color = newColor;
+                }
+            }
+            else
+            {
+                foreach (var mat in Model.Materials)
+                {
+                    var newColor = mat.Color;
+                    newColor.A = 0xFF;
+                    mat.Color = newColor;
+                }
+            }
+        }
+        else
+        {
+            if (Save.CurrentRecord.GetFlag("DashRefill") == 0)
+            {
+                foreach (var mat in Model.Materials)
+                {
+                    var newColor = mat.Color;
+                    newColor.A = 0x28;
+                    mat.Color = newColor;
+                }
+            }
+            else
+            {
+                foreach (var mat in Model.Materials)
+                {
+                    var newColor = mat.Color;
+                    newColor.A = 0xFF;
+                    mat.Color = newColor;
+                }
+            }
+        }
+
+        if (tCooldown > 0)
 		{
 			tCooldown -= Time.Delta;
 			if (tCooldown <= 0.0f)
@@ -73,6 +116,21 @@ public class Refill : Actor, IHaveSprites, IPickup, IHaveModels, ICastPointShado
 
 	public void Pickup(Player player)
 	{
+		if (IsDouble)
+        {
+            if (Save.CurrentRecord.GetFlag("DoubleDashRefill") == 0)
+            {
+                return;
+            }
+        }
+		else
+        {
+            if (Save.CurrentRecord.GetFlag("DashRefill") == 0)
+            {
+                return;
+            }
+        }
+
 		int count = IsDouble ? 2 : 1;
 		if (tCooldown <= 0 && player.Dashes < count)
 		{

@@ -20,7 +20,7 @@ public class Spring : Attacher, IHaveModels, IPickup
 	}
 
 	public override void Update()
-	{
+    {
 		Model.Update(Time);
 
 		if (tCooldown > 0)
@@ -37,8 +37,13 @@ public class Spring : Attacher, IHaveModels, IPickup
 	}
 
 	public void Pickup(Player player)
-	{
-		if (tCooldown <= 0)
+    {
+        if (Save.CurrentRecord.GetFlag("Spring") == 0)
+        {
+            return;
+        }
+
+        if (tCooldown <= 0)
 		{
 			UpdateOffScreen = true;
 			Audio.Play(Sfx.sfx_springboard, Position);

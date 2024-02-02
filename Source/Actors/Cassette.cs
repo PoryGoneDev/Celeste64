@@ -41,8 +41,27 @@ public class Cassette : Actor, IHaveModels, IPickup, IHaveSprites, ICastPointSha
 	}
 
 	public override void Update()
-	{
-		PointShadowAlpha = IsCollected ? 0.5f : 1.0f;
+    {
+        if (Save.CurrentRecord.GetFlag("Cassette") == 0)
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0x28;
+                mat.Color = newColor;
+            }
+        }
+        else
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0xFF;
+                mat.Color = newColor;
+            }
+        }
+
+        PointShadowAlpha = IsCollected ? 0.5f : 1.0f;
 		Calc.Approach(ref tCooldown, 0, Time.Delta);
 		Calc.Approach(ref tWiggle, 0, Time.Delta / 0.7f);
 	}
@@ -60,8 +79,13 @@ public class Cassette : Actor, IHaveModels, IPickup, IHaveSprites, ICastPointSha
 	}
 
 	public void Pickup(Player player)
-	{
-		if (!IsCollected && tCooldown <= 0.0f && !Game.Instance.IsMidTransition)
+    {
+        if (Save.CurrentRecord.GetFlag("Cassette") == 0)
+        {
+            return;
+        }
+
+        if (!IsCollected && tCooldown <= 0.0f && !Game.Instance.IsMidTransition)
 		{
 			player.Stop();
 			player.EnterCassette(this);
