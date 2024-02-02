@@ -334,4 +334,68 @@ public class ArchipelagoManager
         //            $"{message}\n\nStack Trace:\n{exception.StackTrace}"
         //);
     }
+
+    public void CheckReceivedItemQueue()
+    {
+        for (int index = Save.CurrentRecord.GetFlag("ItemRcv"); index < ItemQueue.Count; index++)
+        {
+            var item = ItemQueue[index].Item2;
+
+            Audio.Play(Sfx.sfx_secret);
+
+            if (item.Item == 0xCA0000)
+            {
+                Save.CurrentRecord.IncFlag("Strawberries");
+            }
+            else if (item.Item == 0xCA0001)
+            {
+                Save.CurrentRecord.SetFlag("DashRefill");
+            }
+            else if (item.Item == 0xCA0002)
+            {
+                Save.CurrentRecord.SetFlag("DoubleDashRefill");
+            }
+            else if (item.Item == 0xCA0003)
+            {
+                Save.CurrentRecord.SetFlag("Feather");
+            }
+            else if (item.Item == 0xCA0004)
+            {
+                Save.CurrentRecord.SetFlag("Coin");
+            }
+            else if (item.Item == 0xCA0005)
+            {
+                Save.CurrentRecord.SetFlag("Cassette");
+            }
+            else if (item.Item == 0xCA0006)
+            {
+                Save.CurrentRecord.SetFlag("TrafficBlock");
+            }
+            else if (item.Item == 0xCA0007)
+            {
+                Save.CurrentRecord.SetFlag("Spring");
+            }
+            else if (item.Item == 0xCA0008)
+            {
+                Save.CurrentRecord.SetFlag("Breakables");
+            }
+
+            Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
+        }
+    }
+
+    public void CheckLocationsToSend()
+    {
+        List<long> locationsToCheck = new List<long>();
+        foreach (var strawbID in Save.CurrentRecord.Strawberries)
+        {
+            long locationID = LocationStringToID[strawbID];
+            if (!SentLocations.Contains(locationID))
+            {
+                locationsToCheck.Add(locationID);
+            }
+        }
+
+        CheckLocations(locationsToCheck.ToArray());
+    }
 }
