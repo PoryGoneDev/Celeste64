@@ -13,6 +13,7 @@ using System.Diagnostics;
 namespace Celeste64;
 
 
+
 public record ArchipelagoConnectionInfo
 {
     public string Url { get; init; } = "wss://archipelago.gg:38281";
@@ -40,6 +41,7 @@ public class ArchipelagoManager
     public List<Tuple<int, NetworkItem>> ItemQueue { get; private set; } = new();
     public Dictionary<long, NetworkItem> LocationDictionary { get; private set; } = new();
     public List<Tuple<JsonMessageType, JsonMessagePart[]>> ChatLog { get; } = new();
+    public HashSet<long> SentLocations { get; set; } = [];
 
     public bool CanCollect => _session.RoomState.CollectPermissions is Permissions.Goal or Permissions.Enabled;
     public bool CanRelease => _session.RoomState.ReleasePermissions is Permissions.Goal or Permissions.Enabled;
@@ -54,6 +56,39 @@ public class ArchipelagoManager
 
     public int StrawberriesRequired { get; set; }
 
+    public static Dictionary<string, int> LocationStringToID { get; set; } = new Dictionary<string, int>
+    {
+        { "1/0",  0xCA0000 },
+        { "1/1",  0xCA0001 },
+        { "1/2",  0xCA0002 },
+        { "1/3",  0xCA0003 },
+        { "1/4",  0xCA0004 },
+        { "1/5",  0xCA0005 },
+        { "1/6",  0xCA0006 },
+        { "1/7",  0xCA0007 },
+        { "1/8",  0xCA0008 },
+        { "1/9",  0xCA0009 },
+        { "1/10", 0xCA0010 },
+        { "1/11", 0xCA0011 },
+        { "1/12", 0xCA0012 },
+        { "1/13", 0xCA0013 },
+        { "1/14", 0xCA0014 },
+        { "1/15", 0xCA0015 },
+        { "1/16", 0xCA0016 },
+        { "1/17", 0xCA0017 },
+        { "1/18", 0xCA0018 },
+        { "1/19", 0xCA0019 },
+        { "1/20", 0xCA0020 },
+        { "1/21", 0xCA0021 },
+        { "1/22", 0xCA0022 },
+        { "1/23", 0xCA0023 },
+        { "1/24", 0xCA0024 },
+        { "1/25", 0xCA0025 },
+        { "1/26", 0xCA0026 },
+        { "1/27", 0xCA0027 },
+        { "1/28", 0xCA0028 },
+        { "1/29", 0xCA0029 },
+    };
 
     public ArchipelagoManager(ArchipelagoConnectionInfo connectionInfo)
     {
@@ -172,8 +207,13 @@ public class ArchipelagoManager
         }
     }
 
-    public void CheckLocations(params long[] locations)
+    public void CheckLocations(long[] locations)
     {
+        foreach (var locationID in locations)
+        {
+            SentLocations.Add(locationID);
+        }
+
         try
         {
             _session.Locations.CompleteLocationChecks(locations);

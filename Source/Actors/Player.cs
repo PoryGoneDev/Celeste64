@@ -1703,6 +1703,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 		if (lastStrawb != null)
 			Save.CurrentRecord.Strawberries.Add(lastStrawb.ID);
+
+        if (lastStrawb != null)
+            Log.Info(lastStrawb.ID);
 		
 		yield return 1.2f;
 
