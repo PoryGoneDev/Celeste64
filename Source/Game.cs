@@ -318,8 +318,8 @@ public class Game : Module
 
         if (scene is Celeste64.World)
 		{
-            CheckReceivedItemQueue();
-            CheckLocationsToSend();
+            ArchipelagoManager.CheckReceivedItemQueue();
+            ArchipelagoManager.CheckLocationsToSend();
         }
 	}
 
@@ -358,69 +358,5 @@ public class Game : Module
 		if (transitionStep == TransitionStep.None)
 			audioBeatCounterEvent = true;
 		return FMOD.RESULT.OK;
-	}
-
-    public void CheckReceivedItemQueue()
-    {
-        for (int index = Save.CurrentRecord.GetFlag("ItemRcv"); index < ArchipelagoManager.ItemQueue.Count; index++)
-		{
-			var item = ArchipelagoManager.ItemQueue[index].Item2;
-
-            Log.Info("Check Received");
-
-            if (item.Item == 0xCA0000)
-            {
-                Save.CurrentRecord.IncFlag("Strawberries");
-            }
-			else if (item.Item == 0xCA0001)
-			{
-				Save.CurrentRecord.SetFlag("DashRefill");
-			}
-			else if (item.Item == 0xCA0002)
-			{
-				Save.CurrentRecord.SetFlag("DoubleDashRefill");
-			}
-			else if (item.Item == 0xCA0003)
-            {
-                Save.CurrentRecord.SetFlag("Feather");
-			}
-			else if (item.Item == 0xCA0004)
-			{
-				Save.CurrentRecord.SetFlag("Coin");
-			}
-			else if (item.Item == 0xCA0005)
-			{
-				Save.CurrentRecord.SetFlag("Cassette");
-			}
-			else if (item.Item == 0xCA0006)
-			{
-				Save.CurrentRecord.SetFlag("TrafficBlock");
-			}
-			else if (item.Item == 0xCA0007)
-			{
-				Save.CurrentRecord.SetFlag("Spring");
-			}
-			else if (item.Item == 0xCA0008)
-			{
-				Save.CurrentRecord.SetFlag("Breakables");
-			}
-
-			Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
-        }
-    }
-
-	public void CheckLocationsToSend()
-	{
-		List<long> locationsToCheck = new List<long>();
-		foreach (var strawbID in Save.CurrentRecord.Strawberries)
-		{
-			long locationID = ArchipelagoManager.LocationStringToID[strawbID];
-			if (!ArchipelagoManager.SentLocations.Contains(locationID))
-			{
-				locationsToCheck.Add(locationID);
-			}
-        }
-
-        ArchipelagoManager.CheckLocations(locationsToCheck.ToArray());
 	}
 }
