@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Text.Json;
 using System.Security.AccessControl;
 using Archipelago.MultiClient.Net.Packets;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Celeste64;
 
@@ -66,6 +67,8 @@ public class Game : Module
 	public AudioHandle Ambience;
 	public AudioHandle Music;
 
+	public bool ConnectedSuccessfully = false;
+
 
     public ArchipelagoManager ArchipelagoManager { get; set; }
 
@@ -88,18 +91,23 @@ public class Game : Module
 
 		scenes.Push(new Startup());
 
+
         // Archipelago
+        string data = File.ReadAllText(ArchipelagoManager.ConnectionInfoPath);
+        ArchipelagoConnectionInfo AP_Conn = JsonSerializer.Deserialize(data, ArchipelagoConnectionInfoContext.Default.ArchipelagoConnectionInfo);
+
         ArchipelagoManager = new ArchipelagoManager(new()
         {
-            Url = "localhost:38281",
-            SlotName = "Pory",
-            Password = "",
+            Url = AP_Conn?.Url,
+            SlotName = AP_Conn?.SlotName,
+            Password = AP_Conn?.Password,
         });
 
         var result = ArchipelagoManager.TryConnect().Result;
-        if (result != null)
+		if (result == null)
         {
             Log.Info("Login Success");
+			ConnectedSuccessfully = true;
         }
 		// End Archipelago
     }
