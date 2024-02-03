@@ -9,6 +9,7 @@ using Archipelago.MultiClient.Net.Packets;
 using System.Text;
 using Archipelago.MultiClient.Net.Models;
 using System.Diagnostics;
+using System.Collections.ObjectModel;
 
 namespace Celeste64;
 
@@ -39,14 +40,10 @@ public class ArchipelagoManager
     public bool IsDeathLinkSafe { get; set; }
     public bool Ready { get; private set; }
     public List<Tuple<int, NetworkItem>> ItemQueue { get; private set; } = new();
+    public List<long> CollectedLocations { get; private set; } = new();
     public Dictionary<long, NetworkItem> LocationDictionary { get; private set; } = new();
-    public List<Tuple<JsonMessageType, JsonMessagePart[]>> ChatLog { get; } = new();
     public HashSet<long> SentLocations { get; set; } = [];
 
-    public bool CanCollect => _session.RoomState.CollectPermissions is Permissions.Goal or Permissions.Enabled;
-    public bool CanRelease => _session.RoomState.ReleasePermissions is Permissions.Goal or Permissions.Enabled;
-    public bool CanRemaining => _session.RoomState.RemainingPermissions is Permissions.Goal or Permissions.Enabled;
-    public string Seed => _session.RoomState.Seed;
     public int Slot => _session.ConnectionInfo.Slot;
     public bool DeathLink => _session.ConnectionInfo.Tags.Contains("DeathLink");
     public int HintPoints => _session.RoomState.HintPoints;
@@ -68,26 +65,60 @@ public class ArchipelagoManager
         { "1/7",  0xCA0007 },
         { "1/8",  0xCA0008 },
         { "1/9",  0xCA0009 },
-        { "1/10", 0xCA0010 },
-        { "1/11", 0xCA0011 },
-        { "1/12", 0xCA0012 },
-        { "1/13", 0xCA0013 },
-        { "1/14", 0xCA0014 },
-        { "1/15", 0xCA0015 },
-        { "1/16", 0xCA0016 },
-        { "1/17", 0xCA0017 },
-        { "1/18", 0xCA0018 },
-        { "1/19", 0xCA0019 },
-        { "1/20", 0xCA0020 },
-        { "1/21", 0xCA0021 },
-        { "1/22", 0xCA0022 },
-        { "1/23", 0xCA0023 },
-        { "1/24", 0xCA0024 },
-        { "1/25", 0xCA0025 },
-        { "1/26", 0xCA0026 },
-        { "1/27", 0xCA0027 },
-        { "1/28", 0xCA0028 },
-        { "1/29", 0xCA0029 },
+        { "1/10", 0xCA000A },
+        { "1/11", 0xCA000B },
+        { "1/12", 0xCA000C },
+        { "1/13", 0xCA000D },
+        { "1/14", 0xCA000E },
+        { "1/15", 0xCA000F },
+        { "1/16", 0xCA0010 },
+        { "1/17", 0xCA0011 },
+        { "1/18", 0xCA0012 },
+        { "1/19", 0xCA0013 },
+        { "1-1/0", 0xCA0014 },
+        { "1-2/0", 0xCA0015 },
+        { "1-3/0", 0xCA0016 },
+        { "1-4/0", 0xCA0017 },
+        { "1-5/0", 0xCA0018 },
+        { "1-6/0", 0xCA0019 },
+        { "1-7/0", 0xCA001A },
+        { "1-8/0", 0xCA001B },
+        { "1-9/0", 0xCA001C },
+        { "1-10/0", 0xCA001D },
+    };
+
+    public static Dictionary<int, string> LocationIDToString { get; set; } = new Dictionary<int, string>
+    {
+        { 0xCA0000, "1/0" },
+        { 0xCA0001, "1/1" },
+        { 0xCA0002, "1/2" },
+        { 0xCA0003, "1/3" },
+        { 0xCA0004, "1/4" },
+        { 0xCA0005, "1/5" },
+        { 0xCA0006, "1/6" },
+        { 0xCA0007, "1/7" },
+        { 0xCA0008, "1/8" },
+        { 0xCA0009, "1/9" },
+        { 0xCA000A, "1/10" },
+        { 0xCA000B, "1/11" },
+        { 0xCA000C, "1/12" },
+        { 0xCA000D, "1/13" },
+        { 0xCA000E, "1/14" },
+        { 0xCA000F, "1/15" },
+        { 0xCA0010, "1/16" },
+        { 0xCA0011, "1/17" },
+        { 0xCA0012, "1/18" },
+        { 0xCA0013, "1/19" },
+        { 0xCA0014, "1-1/0" },
+        { 0xCA0015, "1-2/0" },
+        { 0xCA0016, "1-3/0" },
+        { 0xCA0017, "1-4/0" },
+        { 0xCA0018, "1-5/0" },
+        { 0xCA0019, "1-6/0" },
+        { 0xCA001A, "1-7/0" },
+        { 0xCA001B, "1-8/0" },
+        { 0xCA001C, "1-9/0" },
+        { 0xCA001D, "1-10/0" },
     };
 
     public ArchipelagoManager(ArchipelagoConnectionInfo connectionInfo)
@@ -111,6 +142,7 @@ public class ArchipelagoManager
         _session.Socket.ErrorReceived += OnError;
         _session.Socket.PacketReceived += OnPacketReceived;
         _session.Items.ItemReceived += OnItemReceived;
+        _session.Locations.CheckedLocationsUpdated += OnLocationReceived;
 
         // Attempt to connect to the server.
         try
@@ -173,6 +205,7 @@ public class ArchipelagoManager
         {
             _session.Socket.ErrorReceived -= OnError;
             _session.Items.ItemReceived -= OnItemReceived;
+            _session.Locations.CheckedLocationsUpdated -= OnLocationReceived;
             _session.Socket.PacketReceived -= OnPacketReceived;
             _session.Socket.DisconnectAsync(); // It'll disconnect on its own time.
             _session = null;
@@ -282,8 +315,15 @@ public class ArchipelagoManager
         var i = helper.Index;
         while (helper.Any())
         {
-            Log.Info("Append Item");
             ItemQueue.Add(new(i++, helper.DequeueItem()));
+        }
+    }
+
+    private void OnLocationReceived(ReadOnlyCollection<long> newCheckedLocations)
+    {
+        foreach (var newLoc in newCheckedLocations)
+        {
+            CollectedLocations.Add(newLoc);
         }
     }
 
@@ -389,13 +429,44 @@ public class ArchipelagoManager
         List<long> locationsToCheck = new List<long>();
         foreach (var strawbID in Save.CurrentRecord.Strawberries)
         {
-            long locationID = LocationStringToID[strawbID];
-            if (!SentLocations.Contains(locationID))
+            if (LocationStringToID.ContainsKey(strawbID))
             {
-                locationsToCheck.Add(locationID);
+                long locationID = LocationStringToID[strawbID];
+                if (!SentLocations.Contains(locationID))
+                {
+                    locationsToCheck.Add(locationID);
+                }
+            }
+            else
+            {
+                Log.Info($"Untracked Strawberry: {strawbID}");
             }
         }
 
         CheckLocations(locationsToCheck.ToArray());
+    }
+
+    public void HandleCollectedLocations()
+    {
+        foreach (var newLoc in CollectedLocations)
+        {
+            if (LocationIDToString.ContainsKey((int)newLoc))
+            {
+                string strawberryLocID = LocationIDToString[(int)newLoc];
+                if (!Save.CurrentRecord.Strawberries.Contains(strawberryLocID))
+                {
+                    Save.CurrentRecord.Strawberries.Add(strawberryLocID);
+                }
+
+                if (strawberryLocID.Contains("-"))
+                {
+                    string subMapID = strawberryLocID.Split("/")[0];
+                    if (!Save.CurrentRecord.CompletedSubMaps.Contains(subMapID))
+                    {
+                        Save.CurrentRecord.CompletedSubMaps.Add(subMapID);
+                    }
+                }
+            }
+        }
     }
 }

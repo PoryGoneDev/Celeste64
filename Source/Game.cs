@@ -339,6 +339,7 @@ public class Game : App
 		{
             ArchipelagoManager.CheckReceivedItemQueue();
             ArchipelagoManager.CheckLocationsToSend();
+            ArchipelagoManager.HandleCollectedLocations();
         }
 	}
 
