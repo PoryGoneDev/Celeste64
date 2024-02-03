@@ -1,3 +1,4 @@
+using Archipelago.MultiClient.Net.Enums;
 using System.Diagnostics;
 using ModelEntry = (Celeste64.Actor Actor, Celeste64.Model Model);
 
@@ -280,7 +281,14 @@ public class World : Scene
 		}
 		else
 		{
-			Game.Instance.Music.Set("at_baddy", 1);
+			if (!Game.Instance.ArchipelagoManager.GoalSent)
+			{
+				if (Save.CurrentRecord.GetFlag("Strawberries") >= Game.Instance.ArchipelagoManager.StrawberriesRequired)
+				{
+					Game.Instance.ArchipelagoManager.UpdateGameStatus(ArchipelagoClientState.ClientGoal);
+				}
+			}
+            Game.Instance.Music.Set("at_baddy", 1);
 		}
 
         // handle strawb counter

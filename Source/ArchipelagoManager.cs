@@ -35,6 +35,8 @@ public class ArchipelagoManager
     private DeathLinkService? _deathLinkService;
     private DateTime _lastDeath;
 
+    public bool GoalSent = false;
+
     public DeathLink? DeathLinkData { get; private set; }
     public bool IsDeathLinkSafe { get; set; }
     public bool Ready { get; private set; }
@@ -290,6 +292,10 @@ public class ArchipelagoManager
             // TODO: Send a message to the client that connection has been dropped.
             Disconnect();
         }
+    }
+    public void UpdateGameStatus(ArchipelagoClientState state)
+    {
+        SendPacket(new StatusUpdatePacket { Status = state });
     }
 
     public string GetPlayerName(int slot)
