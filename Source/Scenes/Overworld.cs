@@ -91,7 +91,7 @@ public class Overworld : Scene
 						time = record.Time;
 					}
 
-					UI.Strawberries(batch, strawbs, new Vec2(-8, -UI.IconSize / 2 - 4), 1);
+					UI.Strawberries(batch, strawbs, Game.Instance.ArchipelagoManager.StrawberriesRequired, new Vec2(-8, -UI.IconSize / 2 - 4), 1);
 					UI.Deaths(batch, deaths, new Vec2(8, -UI.IconSize / 2 - 4), 0);
 					UI.Timer(batch, time, new Vec2(0, UI.IconSize / 2 + 4), 0.5f);
 				}
