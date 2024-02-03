@@ -51,9 +51,9 @@ public static class UI
 		Icon(batch, "icon_stopwatch", str, at, align);
 	}
 
-	public static void Strawberries(Batcher batch, int count, in Vec2 at, float align = 0)
+	public static void Strawberries(Batcher batch, int count, int req, in Vec2 at, float align = 0)
 	{
-		Icon(batch, "icon_strawberry", $"x{count:00}  ", at, align);
+		Icon(batch, "icon_strawberry", $"x{count:00}/{req:00}  ", at, align);
 	}
 
 	public static void Deaths(Batcher batch, int count, in Vec2 at, float align = 0)
