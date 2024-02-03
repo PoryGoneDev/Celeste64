@@ -320,6 +320,7 @@ public class Game : Module
 		{
             ArchipelagoManager.CheckReceivedItemQueue();
             ArchipelagoManager.CheckLocationsToSend();
+            ArchipelagoManager.HandleCollectedLocations();
         }
 	}
 
