@@ -10,21 +10,20 @@ using System.Text;
 using Archipelago.MultiClient.Net.Models;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace Celeste64;
 
 
 
+[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSerializable(typeof(ArchipelagoConnectionInfo))]
+public partial class ArchipelagoConnectionInfoContext : JsonSerializerContext { }
 public record ArchipelagoConnectionInfo
 {
     public string Url { get; init; } = "wss://archipelago.gg:38281";
     public string SlotName { get; init; } = "Madeline";
     public string Password { get; init; } = "";
-
-    /// <summary>
-    /// Returns the default connection information.
-    /// </summary>
-    public static readonly ArchipelagoConnectionInfo Default = new();
 }
 
 public class ArchipelagoManager
@@ -120,6 +119,41 @@ public class ArchipelagoManager
         { 0xCA001C, "1-9/0" },
         { 0xCA001D, "1-10/0" },
     };
+
+    public static Dictionary<long, string> ItemIDToString { get; set; } = new Dictionary<long, string>
+    {
+        { 0xCA0000, "Strawberry" },
+        { 0xCA0001, "Dash Refills" },
+        { 0xCA0002, "Double Dash Refills" },
+        { 0xCA0003, "Feathers" },
+        { 0xCA0004, "Coins" },
+        { 0xCA0005, "Cassettes" },
+        { 0xCA0006, "Traffic Blocks" },
+        { 0xCA0007, "Springs" },
+        { 0xCA0008, "Breakable Blocks" }
+    };
+
+    private static string AP_JSON_FILE = "AP.json";
+    private static string? connectionInfoPath = null;
+    public static string ConnectionInfoPath
+    {
+        get
+        {
+            if (connectionInfoPath == null)
+            {
+                var baseFolder = AppContext.BaseDirectory;
+                var searchUpPath = "";
+                int up = 0;
+                while (!File.Exists(Path.Join(baseFolder, searchUpPath, AP_JSON_FILE)) && up++ < 5)
+                    searchUpPath = Path.Join(searchUpPath, "..");
+                if (!File.Exists(Path.Join(baseFolder, searchUpPath, AP_JSON_FILE)))
+                    throw new Exception($"Unable to find {AP_JSON_FILE} File from '{baseFolder}'");
+                connectionInfoPath = Path.Join(baseFolder, searchUpPath, AP_JSON_FILE);
+            }
+
+            return connectionInfoPath;
+        }
+    }
 
     public ArchipelagoManager(ArchipelagoConnectionInfo connectionInfo)
     {
@@ -348,31 +382,12 @@ public class ArchipelagoManager
 
     private void OnPacketReceived(ArchipelagoPacketBase packet)
     {
-        //// Special handling for PrintJSON messages only, otherwise we log complete details about packet below.
-        //if (packet is PrintJsonPacket messagePacket)
-        //{
-        //    // Treat unknown message types as "Chat" for forwards compat so we don't crash on new ones.
-        //    ChatLog.Add(new(messagePacket.MessageType ?? JsonMessageType.Chat, messagePacket.Data));
-        //    var message = messagePacket
-        //        .Data
-        //        .Aggregate(new StringBuilder(), (sb, data) => sb.Append(data.Text))
-        //        .ToString();
-        //
-        //    RandUtil.Console("Archipelago", $"Message Received: {message}");
-        //    return;
-        //}
-        //
-        //RandUtil.Console("Archipelago", $"Packet Received: {packet.GetType().Name}");
-        //RandUtil.PrintProperties(packet);
+
     }
 
     private static void OnError(Exception exception, string message)
     {
-        //RandUtil.Console(
-        //    "Archipelago",
-        //    $"Encountered an unhandled exception in ArchipelagoManager: " +
-        //            $"{message}\n\nStack Trace:\n{exception.StackTrace}"
-        //);
+
     }
 
     public void CheckReceivedItemQueue()
@@ -382,6 +397,7 @@ public class ArchipelagoManager
             var item = ItemQueue[index].Item2;
 
             Audio.Play(Sfx.sfx_secret);
+            Log.Info($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}.");
 
             if (item.Item == 0xCA0000)
             {
