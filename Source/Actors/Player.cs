@@ -858,8 +858,6 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		if (sendDeath)
 		{
 			Game.Instance.ArchipelagoManager.SendDeathLinkIfEnabled("couldn't climb the mountain");
-
-            Game.Instance.ArchipelagoManager.ClearDeathLink();
         }
 	}
 
