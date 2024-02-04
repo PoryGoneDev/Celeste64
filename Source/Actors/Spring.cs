@@ -21,6 +21,25 @@ public class Spring : Attacher, IHaveModels, IPickup
 
 	public override void Update()
     {
+        if (Save.CurrentRecord.GetFlag("Spring") == 0)
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0xA0;
+                mat.Color = newColor;
+            }
+        }
+        else
+        {
+            foreach (var mat in Model.Materials)
+            {
+                var newColor = mat.Color;
+                newColor.A = 0xFF;
+                mat.Color = newColor;
+            }
+        }
+
         Model.Update();
 
 		if (tCooldown > 0)
