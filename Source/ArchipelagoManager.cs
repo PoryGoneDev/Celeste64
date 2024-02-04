@@ -53,6 +53,8 @@ public class ArchipelagoManager
 
 
     public int StrawberriesRequired { get; set; }
+    public int DeathLinkAmnesty { get; set; }
+    public int DeathsCounted = 0;
 
     public static Dictionary<string, int> LocationStringToID { get; set; } = new Dictionary<string, int>
     {
@@ -208,6 +210,7 @@ public class ArchipelagoManager
 
         // Load randomizer data.
         StrawberriesRequired = Convert.ToInt32(((LoginSuccessful)result).SlotData["strawberries_required"]);
+        DeathLinkAmnesty = Convert.ToInt32(((LoginSuccessful)result).SlotData["death_link_amnesty"]);
         bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData["death_link"]);
 
         // Initialize DeathLink service.
@@ -251,6 +254,7 @@ public class ArchipelagoManager
     public void ClearDeathLink()
     {
         DeathLinkData = null;
+        DeathsCounted = 0;
     }
 
     public void SendDeathLinkIfEnabled(string cause)
@@ -260,6 +264,14 @@ public class ArchipelagoManager
         {
             return;
         }
+
+        DeathsCounted = DeathsCounted + 1;
+        if (DeathsCounted < DeathLinkAmnesty)
+        {
+            return;
+        }
+
+        DeathsCounted = 0;
 
         // Log our current time so we can make sure we ignore our own DeathLink.
         _lastDeath = DateTime.Now;
@@ -274,6 +286,8 @@ public class ArchipelagoManager
             // TODO: Send a message to the client that connection has been dropped.
             Disconnect();
         }
+
+        Game.Instance.ArchipelagoManager.ClearDeathLink();
     }
 
     public void CheckLocations(long[] locations)
