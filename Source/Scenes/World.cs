@@ -806,6 +806,8 @@ public class World : Scene
 			{
 				var scroll = -new Vec2(1.25f, 0.9f) * (float)(Time.Duration.TotalSeconds) * 0.05f;
 
+				Game.Instance.ArchipelagoManager.HandleMessageQueue(batch, font, bounds);
+
 				batch.PushBlend(BlendMode.Add);
 				batch.Image(Assets.Textures["overworld/overlay"], 
 					bounds.TopLeft, bounds.TopRight, bounds.BottomRight, bounds.BottomLeft,

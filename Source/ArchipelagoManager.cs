@@ -25,6 +25,16 @@ public record ArchipelagoConnectionInfo
     public string SlotName { get; init; } = "Madeline";
     public string Password { get; init; } = "";
 }
+public struct ArchipelagoMessage
+{
+    public string Text { get; init; } = "";
+    public int RemainingTime { get; set; } = 300;
+
+    public ArchipelagoMessage(string text)
+    {
+        Text = text;
+    }
+}
 
 public class ArchipelagoManager
 {
@@ -44,6 +54,7 @@ public class ArchipelagoManager
     public List<long> CollectedLocations { get; private set; } = new();
     public Dictionary<long, NetworkItem> LocationDictionary { get; private set; } = new();
     public HashSet<long> SentLocations { get; set; } = [];
+    public List<ArchipelagoMessage> MessageLog { get; set; } = new();
 
     public int Slot => _session.ConnectionInfo.Slot;
     public bool DeathLink => _session.ConnectionInfo.Tags.Contains("DeathLink");
@@ -418,6 +429,7 @@ public class ArchipelagoManager
 
             Audio.Play(Sfx.sfx_secret);
             Log.Info($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}.");
+            MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}."));
 
             if (item.Item == 0xCA0000)
             {
@@ -501,6 +513,27 @@ public class ArchipelagoManager
                     {
                         Save.CurrentRecord.CompletedSubMaps.Add(subMapID);
                     }
+                }
+            }
+        }
+    }
+
+    public void HandleMessageQueue(Batcher batch, SpriteFont font, Rect bounds)
+    {
+        for (int i = Math.Min(Math.Max(4, MessageLog.Count - 1), 4); i >= 0; i--)
+        {
+            if (MessageLog.Count > i)
+            {
+                batch.Text(font, Game.Instance.ArchipelagoManager.MessageLog[i].Text, bounds.BottomLeft, new Vec2(0, 5 - i), new Foster.Framework.Color(0xF5, 0x42, 0xC8, 0xFF));
+                ArchipelagoMessage updatedMessage = Game.Instance.ArchipelagoManager.MessageLog[i];
+                updatedMessage.RemainingTime -= 1;
+                if (updatedMessage.RemainingTime <= 0)
+                {
+                    Game.Instance.ArchipelagoManager.MessageLog.RemoveAt(i);
+                }
+                else
+                {
+                    Game.Instance.ArchipelagoManager.MessageLog[i] = updatedMessage;
                 }
             }
         }
