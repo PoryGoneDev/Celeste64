@@ -1,3 +1,23 @@
+# Celeste 64: Archipelago Edition
+This fork is a Multiworld Randomizer build of Celeste 64: Fragments of the Mountain.
+
+Ported to the Archipelago Multiworld framework in a week(ish) by PoryGone, this build provides the following as unlockable items:
+- Strawberries
+- Dash Refills
+- Double Dash Refills
+- Feathers
+- Coins
+- Cassettes
+- Traffic Blocks
+- Springs
+- Breakable Blocks
+
+The goal is to collect a certain number of Strawberries, then visit Badeline on her floating island.
+
+See the setup guide found within the `celeste64.apworld` file in the release for usage instructions.
+
+Original ReadMe follows:
+
 # Celeste 64: Fragments of the Mountain
 This is the source code and general information for *Celeste 64: Fragments of the Mountain*, a game made by the original Celeste developers in under 2 weeks for Celeste's 6th Anniversary. We haven't done a lot of 3D development so much of this is not very optimized, it's coded in libraries mostly intended for 2D games, and we put it all together very, very quickly. Consider this similar to a weekend jam game, so experiment and learn at your own risk!  
 
