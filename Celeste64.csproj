@@ -10,7 +10,6 @@
     <PublishTrimmed>true</PublishTrimmed>
     <Platforms>x64</Platforms>
     <FileUpgradeFlags>40</FileUpgradeFlags>
-    <UpgradeBackupLocation>C:\Users\Andrew\Documents\RandoDev\Celeste64\Backup1\</UpgradeBackupLocation>
     <OldToolsVersion>2.0</OldToolsVersion>
   </PropertyGroup>
   <ItemGroup>
