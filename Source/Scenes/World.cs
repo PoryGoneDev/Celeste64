@@ -1,3 +1,4 @@
+using Archipelago.MultiClient.Net.Enums;
 using System.Diagnostics;
 using ModelEntry = (Celeste64.Actor Actor, Celeste64.Model Model);
 
@@ -72,7 +73,7 @@ public class World : Scene
 		Camera.FarPlane = 800;
 		Camera.FOVMultiplier = 1;
 
-		strawbCounterWas = Save.CurrentRecord.Strawberries.Count;
+		strawbCounterWas = Save.CurrentRecord.GetFlag("Strawberries");
 		strawbCounterWiggle = 0;
 
 		// setup pause menu
@@ -280,17 +281,24 @@ public class World : Scene
 		}
 		else
 		{
-			Game.Instance.Music.Set("at_baddy", 1);
+			if (!Game.Instance.ArchipelagoManager.GoalSent)
+			{
+				if (Save.CurrentRecord.GetFlag("Strawberries") >= Game.Instance.ArchipelagoManager.StrawberriesRequired)
+				{
+					Game.Instance.ArchipelagoManager.UpdateGameStatus(ArchipelagoClientState.ClientGoal);
+				}
+			}
+            Game.Instance.Music.Set("at_baddy", 1);
 		}
 
-		// handle strawb counter
-		{
-			// wiggle when gained
-			if (strawbCounterWas != Save.CurrentRecord.Strawberries.Count)
+        // handle strawb counter
+        {
+            // wiggle when gained
+            if (strawbCounterWas != Save.CurrentRecord.GetFlag("Strawberries"))
 			{
 				strawbCounterCooldown = 4.0f;
 				strawbCounterWiggle = 1.0f;
-				strawbCounterWas = Save.CurrentRecord.Strawberries.Count;
+				strawbCounterWas = Save.CurrentRecord.GetFlag("Strawberries");
 			}
 			else
 				Calc.Approach(ref strawbCounterWiggle, 0, Time.Delta / .6f);
@@ -789,7 +797,7 @@ public class World : Scene
 						Matrix3x2.CreateTranslation(0, -UI.IconSize / 2) * 
 						Matrix3x2.CreateScale(wiggle) * 
 						Matrix3x2.CreateTranslation(at + new Vec2(-60 * (1 - Ease.CubeOut(strawbCounterEase)), UI.IconSize / 2)));
-					UI.Strawberries(batch, Save.CurrentRecord.Strawberries.Count, Vec2.Zero);
+					UI.Strawberries(batch, Save.CurrentRecord.GetFlag("Strawberries"), Game.Instance.ArchipelagoManager.StrawberriesRequired, Vec2.Zero);
 					batch.PopMatrix();
 				}
 			}
@@ -797,6 +805,8 @@ public class World : Scene
 			// overlay
 			{
 				var scroll = -new Vec2(1.25f, 0.9f) * (float)(Time.Duration.TotalSeconds) * 0.05f;
+
+				Game.Instance.ArchipelagoManager.HandleMessageQueue(batch, font, bounds);
 
 				batch.PushBlend(BlendMode.Add);
 				batch.Image(Assets.Textures["overworld/overlay"], 

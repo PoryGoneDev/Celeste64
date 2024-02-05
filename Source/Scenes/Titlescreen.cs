@@ -20,7 +20,7 @@ public class Titlescreen : Scene
 		easing = Calc.Approach(easing, 1, Time.Delta / 5.0f);
 		inputDelay = Calc.Approach(inputDelay, 0, Time.Delta);
 
-		if (Controls.Confirm.Pressed && !Game.Instance.IsMidTransition)
+		if (Controls.Confirm.Pressed && !Game.Instance.IsMidTransition && Game.Instance.ConnectedSuccessfully)
 		{
 			Audio.Play(Sfx.main_menu_first_input);
 			Game.Instance.Goto(new Transition()
@@ -101,7 +101,14 @@ public class Titlescreen : Scene
 				var at = bounds.BottomRight + new Vec2(-16, -4) * Game.RelativeScale + new Vec2(0, -UI.PromptSize);
 				UI.Prompt(batch, Controls.Cancel, "Exit", at, out var width, 1.0f);
 				at.X -= width + 8 * Game.RelativeScale;
-				UI.Prompt(batch, Controls.Confirm, "Confirm", at, out _, 1.0f);
+				if (Game.Instance.ConnectedSuccessfully)
+				{
+					UI.Prompt(batch, Controls.Confirm, "Confirm", at, out _, 1.0f);
+				}
+				else
+                {
+                    UI.Text(batch, "CONNECTION FAILED", bounds.BottomCenter + new Vec2(-10, -4) * Game.RelativeScale, new Vec2(0, 1), Color.Red * 1f);
+                }
 				UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
 			}
 

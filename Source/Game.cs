@@ -1,5 +1,10 @@
-﻿using System.Diagnostics;
+﻿using Archipelago.MultiClient.Net.Enums;
+using Archipelago.MultiClient.Net;
+using System.Diagnostics;
 using System.Text.Json;
+using System.Security.AccessControl;
+using Archipelago.MultiClient.Net.Packets;
+using System.Text.Json.Serialization.Metadata;
 
 namespace Celeste64;
 
@@ -62,7 +67,13 @@ public class Game : Module
 	public AudioHandle Ambience;
 	public AudioHandle Music;
 
-	public Game()
+	public bool ConnectedSuccessfully = false;
+
+
+    public ArchipelagoManager ArchipelagoManager { get; set; }
+
+
+    public Game()
 	{
 		// If this isn't stored, the delegate will get GC'd and everything will crash :)
 		audioEventCallback = MusicTimelineCallback;
@@ -79,7 +90,27 @@ public class Game : Module
 		Controls.Load();
 
 		scenes.Push(new Startup());
-	}
+
+
+        // Archipelago
+        string data = File.ReadAllText(ArchipelagoManager.ConnectionInfoPath);
+        ArchipelagoConnectionInfo AP_Conn = JsonSerializer.Deserialize(data, ArchipelagoConnectionInfoContext.Default.ArchipelagoConnectionInfo);
+
+        ArchipelagoManager = new ArchipelagoManager(new()
+        {
+            Url = AP_Conn?.Url,
+            SlotName = AP_Conn?.SlotName,
+            Password = AP_Conn?.Password,
+        });
+
+        var result = ArchipelagoManager.TryConnect().Result;
+		if (result == null)
+        {
+            Log.Info("Login Success");
+			ConnectedSuccessfully = true;
+        }
+		// End Archipelago
+    }
 
 	public override void Shutdown()
 	{
@@ -258,7 +289,7 @@ public class Game : Module
 			}
 		}
 
-		
+
 		if (scene is not Celeste64.Startup)
 		{
 			// toggle fullsrceen
@@ -292,6 +323,13 @@ public class Game : Module
 				}
 			}
 		}
+
+        if (scene is Celeste64.World)
+		{
+            ArchipelagoManager.CheckReceivedItemQueue();
+            ArchipelagoManager.CheckLocationsToSend();
+            ArchipelagoManager.HandleCollectedLocations();
+        }
 	}
 
 	public override void Render()

@@ -383,8 +383,25 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 						pickup.Pickup(this);
 				}
 			}
-		}
-	}
+        }
+
+        // DeathLink Handling
+        if (stateMachine.State != States.StrawbGet &&
+			stateMachine.State != States.Bubble &&
+			stateMachine.State != States.Cutscene &&
+			stateMachine.State != States.StrawbReveal &&
+			stateMachine.State != States.Dead &&
+            stateMachine.State != States.Cassette &&
+            stateMachine.State != States.Respawn)
+        {
+            if (Game.Instance.ArchipelagoManager.DeathLinkData != null)
+            {
+				Kill(false);
+
+                Game.Instance.ArchipelagoManager.ClearDeathLink();
+            }
+        }
+    }
 
 	public override void LateUpdate()
 	{
@@ -830,13 +847,18 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 	}
 
-	public void Kill()
+	public void Kill(bool sendDeath = true)
 	{
 		stateMachine.State = States.Dead;
 		storedCameraForward = cameraTargetForward;
 		storedCameraDistance = cameraTargetDistance;
 		Save.CurrentRecord.Deaths++;
 		Dead = true;
+
+		if (sendDeath)
+		{
+			Game.Instance.ArchipelagoManager.SendDeathLinkIfEnabled("couldn't climb the mountain");
+        }
 	}
 
 	private bool ClimbCheckAt(Vec3 offset, out WallHit hit)
@@ -899,7 +921,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private void BreakBlock(BreakBlock block, Vec3 direction)
 	{
-		World.HitStun = 0.1f;
+        if (Save.CurrentRecord.GetFlag("Breakables") == 0)
+        {
+            return;
+        }
+
+        World.HitStun = 0.1f;
 		block.Break(direction);
 
 		if (block.BouncesPlayer)
@@ -1674,6 +1701,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 		if (lastStrawb != null)
 			Save.CurrentRecord.Strawberries.Add(lastStrawb.ID);
+
+        if (lastStrawb != null)
+            Log.Info(lastStrawb.ID);
 		
 		yield return 1.2f;
 
