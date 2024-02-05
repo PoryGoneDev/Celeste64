@@ -28,7 +28,7 @@ public class Overworld : Scene
 
 			if (Save.Instance.TryGetRecord(Level.ID) is {} record)
 			{
-				Menu.Add(new Menu.Option("Continue"));
+				//Menu.Add(new Menu.Option("Continue"));
 				Menu.Add(new Menu.Option("Restart"));
 				Complete = record.GetFlag("Strawberries") >= Level.Strawberries;
 			}
@@ -237,12 +237,13 @@ public class Overworld : Scene
 		{
 			if (Controls.Confirm.ConsumePress() && entries[index].SelectionEase > 0.50f)
 			{
-				if (entries[index].Menu.Index == 1)
-				{
-					Audio.Play(Sfx.main_menu_restart_confirm_popup);
-					restartConfirmMenu.Index = 0;
-					state = States.Restarting;
-				}
+				if (entries[index].Menu.Index == 0)
+                {
+                    Audio.Play(Sfx.main_menu_start_game);
+                    Game.Instance.Music.Stop();
+                    Save.Instance.EraseRecord(entries[index].Level.ID);
+                    state = States.Entering;
+                }
 				else
 				{
 					Audio.Play(Sfx.main_menu_start_game);
