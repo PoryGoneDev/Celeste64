@@ -66,6 +66,85 @@ public static class UI
         Icon(batch, "icon_skull", $"x{count:00}/{req:00}", at, align);
     }
 
+    public static void Items(Batcher batch, in Vec2 at, float align = 0)
+    {
+		Vec2 pos = at;
+		if (Save.CurrentRecord.GetFlag("Breakables") == 0)
+		{
+			Icon(batch, "Breakables_Grey", "", pos, align);
+		}
+		else
+        {
+            Icon(batch, "Breakables_Filled", "", pos, align);
+        }
+        pos.X += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("Cassette") == 0)
+        {
+            Icon(batch, "Cassettes_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Cassettes_Filled", "", pos, align);
+        }
+        pos.X -= (UI.IconSize + 8);
+        pos.Y += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("Coin") == 0)
+        {
+            Icon(batch, "Coins_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Coins_Filled", "", pos, align);
+        }
+        pos.X += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("DashRefill") == 0)
+        {
+            Icon(batch, "Dash_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Dash_Filled", "", pos, align);
+        }
+        pos.X -= (UI.IconSize + 8);
+        pos.Y += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("DoubleDashRefill") == 0)
+        {
+            Icon(batch, "DoubleDash_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "DoubleDash_Filled", "", pos, align);
+        }
+        pos.X += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("Feather") == 0)
+        {
+            Icon(batch, "Feather_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Feather_Filled", "", pos, align);
+        }
+        pos.X -= (UI.IconSize + 8);
+        pos.Y += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("Spring") == 0)
+        {
+            Icon(batch, "Springs_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Springs_Filled", "", pos, align);
+        }
+        pos.X += (UI.IconSize + 8);
+        if (Save.CurrentRecord.GetFlag("TrafficBlock") == 0)
+        {
+            Icon(batch, "Traffic_Grey", "", pos, align);
+        }
+        else
+        {
+            Icon(batch, "Traffic_Filled", "", pos, align);
+        }
+    }
+
     public static void Prompt(Batcher batch, VirtualButton button, string label, in Vec2 at, out float width, float align = 0)
 	{
 		var pos = at;

@@ -823,7 +823,10 @@ public class World : Scene
                     if (Game.Instance.ArchipelagoManager.DeathLink)
                     {
                         UI.DeathLinks(batch, Game.Instance.ArchipelagoManager.DeathsCounted, Game.Instance.ArchipelagoManager.DeathLinkAmnesty, pos);
+                        pos.Y += (UI.IconSize + 8);
                     }
+
+					UI.Items(batch, pos, 0);
                 }
 
 				// show version number when paused / in ending area
