@@ -11,6 +11,7 @@ using Archipelago.MultiClient.Net.Models;
 using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using Archipelago.MultiClient.Net.MessageLog.Messages;
 
 namespace Celeste64;
 
@@ -190,6 +191,7 @@ public class ArchipelagoManager
         // Watch for the following events.
         _session.Socket.ErrorReceived += OnError;
         _session.Socket.PacketReceived += OnPacketReceived;
+        _session.MessageLog.OnMessageReceived += OnMessageReceived;
         _session.Items.ItemReceived += OnItemReceived;
         _session.Locations.CheckedLocationsUpdated += OnLocationReceived;
 
@@ -408,6 +410,21 @@ public class ArchipelagoManager
         foreach (var item in locations.Locations)
         {
             LocationDictionary[item.Location] = item;
+        }
+    }
+
+    private void OnMessageReceived(LogMessage message)
+    {
+        switch (message)
+        {
+            case ItemSendLogMessage:
+                ItemSendLogMessage itemSendMessage = (ItemSendLogMessage)message;
+
+                if (itemSendMessage.IsRelatedToActivePlayer && !itemSendMessage.IsReceiverTheActivePlayer)
+                {
+                    MessageLog.Add(new ArchipelagoMessage(message.ToString()));
+                }
+                break;
         }
     }
 
