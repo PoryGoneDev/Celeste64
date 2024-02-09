@@ -29,12 +29,12 @@ public class Overworld : Scene
 			if (Save.Instance.TryGetRecord(Level.ID) is {} record)
 			{
 				//Menu.Add(new Menu.Option("Continue"));
-				Menu.Add(new Menu.Option("Restart"));
+				Menu.Add(new Menu.Option(Loc.Str("Restart")));
 				Complete = record.GetFlag("Strawberries") >= Level.Strawberries;
 			}
 			else
 			{
-				Menu.Add(new Menu.Option("Start"));
+				Menu.Add(new Menu.Option(Loc.Str("Start")));
 			}
 		}
 
@@ -46,7 +46,7 @@ public class Overworld : Scene
 			batch.SetSampler(new(TextureFilter.Linear, TextureWrap.ClampToEdge, TextureWrap.ClampToEdge));
 
 			var bounds = Target.Bounds;
-			var font = Assets.Fonts.First().Value;
+			var font = Language.Current.SpriteFont;
 			var img = (SelectionEase < 0.50f ? Image : new(Assets.Textures["postcards/back"]));
 
 			if (img.Texture != null)
@@ -156,8 +156,8 @@ public class Overworld : Scene
 		]);
 		mesh.SetIndices<int>([0, 1, 2, 0, 2, 3]);
 
-		restartConfirmMenu.Add(new Menu.Option("Cancel"));
-		restartConfirmMenu.Add(new Menu.Option("Clear Save & Restart Level"));
+		restartConfirmMenu.Add(new Menu.Option(Loc.Str("Cancel")));
+		restartConfirmMenu.Add(new Menu.Option(Loc.Str("RestartLevel")));
 		restartConfirmMenu.UpSound = Sfx.main_menu_roll_up;
 		restartConfirmMenu.DownSound = Sfx.main_menu_roll_down;
 
@@ -187,7 +187,7 @@ public class Overworld : Scene
 		{
 			var it = entries[i];
 			Calc.Approach(ref it.HighlightEase, index == i ? 1.0f : 0.0f, Time.Delta * 8.0f); 
-			Calc.Approach(ref it.SelectionEase, index == i && state == States.Selected || state == States.Restarting ? 1.0f : 0.0f, Time.Delta * 4.0f);
+			Calc.Approach(ref it.SelectionEase, index == i && (state == States.Selected || state == States.Restarting) ? 1.0f : 0.0f, Time.Delta * 4.0f);
 
 			if (it.SelectionEase >= 0.50f && state == States.Selected)
 				it.Menu.Update();
@@ -308,7 +308,7 @@ public class Overworld : Scene
 		var camera = new Camera
 		{
 			Target = target,
-			Position = new Vec3(0, -100 + 30 * Ease.CubeIn(cameraCloseUpEase), 0),
+			Position = new Vec3(0, -100 + 30 * Ease.Cube.In(cameraCloseUpEase), 0),
 			LookAt = new Vec3(0, 0, 0),
 			NearPlane = 1,
 			FarPlane = 1000
@@ -317,11 +317,11 @@ public class Overworld : Scene
 		for (int i = 0; i < entries.Count; i ++)
 		{
 			var it = entries[i];
-			var shift = Ease.CubeIn(1.0f - it.HighlightEase) * 30 - Ease.CubeIn(it.SelectionEase) * 20;
+			var shift = Ease.Cube.In(1.0f - it.HighlightEase) * 30 - Ease.Cube.In(it.SelectionEase) * 20;
 			if (i != index)
-				shift += Ease.CubeInOut(selectedEase) * 50;
+				shift += Ease.Cube.InOut(selectedEase) * 50;
 			var position = new Vec3((i - slide) * 60, shift, 0);
-			var rotation = Ease.CubeInOut(it.SelectionEase);
+			var rotation = Ease.Cube.InOut(it.SelectionEase);
 			var matrix = 
 				Matrix.CreateScale(new Vec3(it.SelectionEase >= 0.50f ? -1 : 1, 1, 1)) *
 				Matrix.CreateRotationX(wobble.Y * it.HighlightEase) *
@@ -378,18 +378,21 @@ public class Overworld : Scene
 			// button prompts
 			if (state != States.Entering)
 			{
-				var cancelPrompt = state == States.Selecting ? "Back" : "Cancel";
+				var cancelPrompt = Loc.Str(state == States.Selecting ? "back" : "cancel");
 				var at = bounds.BottomRight + new Vec2(-16, -4) * Game.RelativeScale + new Vec2(0, -UI.PromptSize);
 				var width = 0.0f;
 				UI.Prompt(batch, Controls.Cancel, cancelPrompt, at, out width, 1.0f);
 				at.X -= width + 8 * Game.RelativeScale;
-				UI.Prompt(batch, Controls.Confirm, "Confirm", at, out _, 1.0f);
-			}
+				UI.Prompt(batch, Controls.Confirm, Loc.Str("confirm"), at, out _, 1.0f);
+
+				// show version number on Overworld as well
+                UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+            }
 
 			if (cameraCloseUpEase > 0)
 			{
 				batch.PushBlend(BlendMode.Subtract);
-				batch.Rect(bounds, Color.White * Ease.CubeIn(cameraCloseUpEase));
+				batch.Rect(bounds, Color.White * Ease.Cube.In(cameraCloseUpEase));
 				batch.PopBlend();
 			}
 			batch.Render(target);

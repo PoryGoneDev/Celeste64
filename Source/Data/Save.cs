@@ -8,6 +8,14 @@ public class Save
 {
 	public const string FileName = "save.json";
 
+	public enum InvertCameraOptions
+	{
+		None,
+		X,
+		Y,
+		Both
+	}
+
 	/// <summary>
 	/// Stored data associated with a single level
 	/// </summary>
@@ -69,6 +77,16 @@ public class Save
 	public int SfxVolume { get; set; } = 10;
 
 	/// <summary>
+	/// Invert the camera in given directions
+	/// </summary>
+	public InvertCameraOptions InvertCamera { get; set; } = InvertCameraOptions.None;
+
+	/// <summary>
+	/// Current Language ID
+	/// </summary>
+	public string Language { get; set; } = "english";
+
+	/// <summary>
 	/// Records for each level
 	/// </summary>
 	public List<LevelRecord> Records { get; set; } = [];
@@ -123,6 +141,11 @@ public class Save
 		ZGuide = !ZGuide;
 	}
 
+	public void SetCameraInverted(InvertCameraOptions value)
+	{
+		InvertCamera = value;
+	}
+
 	public void ToggleTimer()
 	{
 		SpeedrunTimer = !SpeedrunTimer;
@@ -147,6 +170,26 @@ public class Save
 		Audio.SetVCAVolume("vca:/sfx", Calc.Clamp(SfxVolume / 10.0f, 0, 1));
 	}
 
+	public void SaveToFile()
+	{
+		var savePath = Path.Join(App.UserPath, FileName);
+		var tempPath = Path.Join(App.UserPath, FileName + ".backup");
+
+		// first save to a temporary file
+		{
+			using var stream = File.Create(tempPath);
+			Serialize(stream, this);
+			stream.Flush();
+		}
+
+		// validate that the temp path worked, and overwride existing if it did.
+		if (File.Exists(tempPath) &&
+			Deserialize(File.ReadAllText(tempPath)) != null)
+		{
+			File.Copy(tempPath, savePath, true);
+		}
+	}
+
 	public static void Serialize(Stream stream, Save instance)
 	{
 		JsonSerializer.Serialize(stream, instance, SaveContext.Default.Save);
@@ -154,10 +197,18 @@ public class Save
 
 	public static Save? Deserialize(string data)
 	{
-		return JsonSerializer.Deserialize(data, SaveContext.Default.Save);
+		try
+		{
+			return JsonSerializer.Deserialize(data, SaveContext.Default.Save);
+		}
+		catch (Exception e)
+		{
+			Log.Error(e.ToString());
+			return null;
+		}
 	}
 }
 
-[JsonSourceGenerationOptions(WriteIndented = true)]
+[JsonSourceGenerationOptions(WriteIndented = true, AllowTrailingCommas = true, UseStringEnumConverter = true)]
 [JsonSerializable(typeof(Save))]
 internal partial class SaveContext : JsonSerializerContext {}

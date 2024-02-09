@@ -26,6 +26,39 @@ public class Startup : Scene
 			Save.Instance.SyncSettings();
 		}
 
+		// make sure the active language is ready for use,
+		// since the save file may have loaded a different language than default.
+		Language.Current.Use();
+
+		// try to load controls, or overwrite with defaults if they don't exist
+		{
+			var controlsFile = Path.Join(App.UserPath, ControlsConfig.FileName);
+
+			ControlsConfig? controls = null;
+			if (File.Exists(controlsFile))
+			{
+				try
+				{
+					controls = JsonSerializer.Deserialize(File.ReadAllText(controlsFile), ControlsConfigContext.Default.ControlsConfig);
+				}
+				catch
+				{
+					controls = null;
+				}
+			}
+
+			// create defaults if not found
+			if (controls == null)
+			{
+				controls = ControlsConfig.Defaults;
+				using var stream = File.Create(controlsFile);
+				JsonSerializer.Serialize(stream, ControlsConfig.Defaults, ControlsConfigContext.Default.ControlsConfig);
+				stream.Flush();
+			}
+			
+			Controls.Load(controls);
+		}
+
 		// enter game
 		//Assets.Levels[0].Enter(new AngledWipe());
 		Game.Instance.Goto(new Transition()

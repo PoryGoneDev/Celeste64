@@ -78,22 +78,26 @@ public class World : Scene
 
 		// setup pause menu
 		{
-			pauseMenu.Add(new Menu.Option("Resume", () => SetPaused(false)));
-			pauseMenu.Add(new Menu.Option("Retry", () =>
+			Menu optionsMenu = new Menu();
+			optionsMenu.Title = Loc.Str("OptionsTitle");
+			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsFullscreen"), Save.Instance.ToggleFullscreen, () => Save.Instance.Fullscreen));
+			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsZGuide"), Save.Instance.ToggleZGuide, () => Save.Instance.ZGuide));
+			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsTimer"), Save.Instance.ToggleTimer, () => Save.Instance.SpeedrunTimer));
+			optionsMenu.Add(new Menu.MultiSelect<Save.InvertCameraOptions>(Loc.Str("OptionsInvertCamera"), Save.Instance.SetCameraInverted, () => Save.Instance.InvertCamera));
+			optionsMenu.Add(new Menu.Spacer());
+			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, Save.Instance.SetMusicVolume));
+			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, Save.Instance.SetSfxVolume));
+
+			pauseMenu.Title = Loc.Str("PauseTitle");
+            pauseMenu.Add(new Menu.Option(Loc.Str("PauseResume"), () => SetPaused(false)));
+			pauseMenu.Add(new Menu.Option(Loc.Str("PauseRetry"), () =>
 			{
 				SetPaused(false);
 				Audio.StopBus(Sfx.bus_dialog, false);
 				Get<Player>()?.Kill();
 			}));
-			pauseMenu.Add(new Menu.Spacer());
-			pauseMenu.Add(new Menu.Toggle("Fullscreen", Save.Instance.ToggleFullscreen, () => Save.Instance.Fullscreen));
-			pauseMenu.Add(new Menu.Toggle("Z-Guide", Save.Instance.ToggleZGuide, () => Save.Instance.ZGuide));
-			pauseMenu.Add(new Menu.Toggle("Timer", Save.Instance.ToggleTimer, () => Save.Instance.SpeedrunTimer));
-			pauseMenu.Add(new Menu.Spacer());
-			pauseMenu.Add(new Menu.Slider("BGM", 0, 10, () => Save.Instance.MusicVolume, Save.Instance.SetMusicVolume));
-			pauseMenu.Add(new Menu.Slider("SFX", 0, 10, () => Save.Instance.SfxVolume, Save.Instance.SetSfxVolume));
-			pauseMenu.Add(new Menu.Spacer());
-			pauseMenu.Add(new Menu.Option("Save & Quit", () => Game.Instance.Goto(new Transition()
+			pauseMenu.Add(new Menu.Submenu(Loc.Str("PauseOptions"), pauseMenu, optionsMenu));
+			pauseMenu.Add(new Menu.Option(Loc.Str("PauseSaveQuit"), () => Game.Instance.Goto(new Transition()
 			{
 				Mode = Transition.Modes.Replace,
 				Scene = () => new Overworld(true),
@@ -324,7 +328,7 @@ public class World : Scene
 		if (!Paused)
 		{
 			// start pause menu
-			if (Controls.Pause.Pressed && IsPauseEnabled)
+			if (Controls.Pause.ConsumePress() && IsPauseEnabled)
 			{
 				SetPaused(true);
 				return;
@@ -376,13 +380,16 @@ public class World : Scene
 		// unpause
 		else
 		{
-			if (Controls.Pause.Pressed || Controls.Cancel.Pressed)
+			if (Controls.Pause.ConsumePress() || (pauseMenu.IsInMainMenu && Controls.Cancel.ConsumePress()))
 			{
+				pauseMenu.CloseSubMenus();
 				SetPaused(false);
 				Audio.Play(Sfx.ui_unpause);
 			}
 			else
+			{
 				pauseMenu.Update();
+			}
 		}
 
 		debugUpdTimer.Stop();
@@ -400,8 +407,10 @@ public class World : Scene
 				Audio.Play(Sfx.ui_pause);
 				pauseSnapshot = Audio.Play(Sfx.snapshot_pause);
 			}
-			else
+			else {
+				pauseMenu.Index = 0;
 				pauseSnapshot.Stop();
+			}
 
 			Controls.Consume();
 			Paused = paused;
@@ -445,12 +454,12 @@ public class World : Scene
 					continue;
 
 				// check against each triangle in the face
-				for (int i = 0; i < face.Indices.Count - 2; i ++)
+				for (int i = 0; i < face.VertexCount - 2; i ++)
 				{
 					if (Utils.RayIntersectsTriangle(point, direction, 
-						verts[face.Indices[0]], 
-						verts[face.Indices[i + 1]],
-						verts[face.Indices[i + 2]], out float dist))
+						verts[face.VertexStart + 0],
+						verts[face.VertexStart + i + 1],
+						verts[face.VertexStart + i + 2], out float dist))
 					{
 						// too far away
 						if (dist > distance)
@@ -512,10 +521,10 @@ public class World : Scene
 
 				WallHit? closestTriangleOnPlane = null;
 
-				for (int i = 0; i < face.Indices.Count - 2; i++)
+				for (int i = 0; i < face.VertexCount - 2; i++)
 				{
 					if (Utils.PlaneTriangleIntersection(flatPlane,
-						verts[face.Indices[0]], verts[face.Indices[i + 1]], verts[face.Indices[i + 2]],
+						verts[face.VertexStart + 0], verts[face.VertexStart + i + 1], verts[face.VertexStart + i + 2],
 						out var line0, out var line1))
 					{
 						var next = new Vec3(new Line(line0.XY(), line1.XY()).ClosestPoint(flatPoint), point.Z);
@@ -754,7 +763,7 @@ public class World : Scene
 		{
 			batch.SetSampler(new TextureSampler(TextureFilter.Linear, TextureWrap.ClampToEdge, TextureWrap.ClampToEdge));
 			var bounds = new Rect(0, 0, target.Width, target.Height);
-			var font = Assets.Fonts.First().Value;
+			var font = Language.Current.SpriteFont;
 
 			foreach (var actor in All<IHaveUI>())
 				(actor as IHaveUI)!.RenderUI(batch, bounds);
@@ -796,10 +805,17 @@ public class World : Scene
 					batch.PushMatrix(
 						Matrix3x2.CreateTranslation(0, -UI.IconSize / 2) * 
 						Matrix3x2.CreateScale(wiggle) * 
-						Matrix3x2.CreateTranslation(at + new Vec2(-60 * (1 - Ease.CubeOut(strawbCounterEase)), UI.IconSize / 2)));
+						Matrix3x2.CreateTranslation(at + new Vec2(-60 * (1 - Ease.Cube.Out(strawbCounterEase)), UI.IconSize / 2)));
 					UI.Strawberries(batch, Save.CurrentRecord.GetFlag("Strawberries"), Game.Instance.ArchipelagoManager.StrawberriesRequired, Vec2.Zero);
+
 					batch.PopMatrix();
 				}
+
+				// show version number when paused / in ending area
+				if (IsInEndingArea || Paused)
+				{
+                    UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                }
 			}
 
 			// overlay
