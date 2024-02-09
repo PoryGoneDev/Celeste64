@@ -811,6 +811,21 @@ public class World : Scene
 					batch.PopMatrix();
 				}
 
+				if (Paused)
+                {
+					Vec2 pos = new Vec2(4, UI.IconSize + 8);
+
+					if (IsInEndingArea)
+					{
+						pos.Y += (UI.IconSize + 8);
+					}
+
+                    if (Game.Instance.ArchipelagoManager.DeathLink)
+                    {
+                        UI.DeathLinks(batch, Game.Instance.ArchipelagoManager.DeathsCounted, Game.Instance.ArchipelagoManager.DeathLinkAmnesty, pos);
+                    }
+                }
+
 				// show version number when paused / in ending area
 				if (IsInEndingArea || Paused)
 				{

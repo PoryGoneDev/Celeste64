@@ -59,9 +59,14 @@ public static class UI
 	public static void Deaths(Batcher batch, int count, in Vec2 at, float align = 0)
 	{
 		Icon(batch, "icon_skull", $"x{count:000}", at, align);
-	}
+    }
 
-	public static void Prompt(Batcher batch, VirtualButton button, string label, in Vec2 at, out float width, float align = 0)
+    public static void DeathLinks(Batcher batch, int count, int req, in Vec2 at, float align = 0)
+    {
+        Icon(batch, "icon_skull", $"x{count:00}/{req:00}", at, align);
+    }
+
+    public static void Prompt(Batcher batch, VirtualButton button, string label, in Vec2 at, out float width, float align = 0)
 	{
 		var pos = at;
 		var icon = Controls.GetPrompt(button);
