@@ -423,11 +423,17 @@ public class ArchipelagoManager
 
     public void CheckReceivedItemQueue()
     {
+        int audioGuard = 0;
         for (int index = Save.CurrentRecord.GetFlag("ItemRcv"); index < ItemQueue.Count; index++)
         {
             var item = ItemQueue[index].Item2;
 
-            Audio.Play(Sfx.sfx_secret);
+            if (audioGuard < 3)
+            {
+                audioGuard++;
+                Audio.Play(Sfx.sfx_secret);
+            }
+
             Log.Info($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}.");
             MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}."));
 
