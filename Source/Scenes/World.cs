@@ -815,7 +815,7 @@ public class World : Scene
                 {
 					Vec2 pos = new Vec2(4, UI.IconSize + 8);
 
-					if (IsInEndingArea)
+					if (IsInEndingArea || Save.Instance.SpeedrunTimer)
 					{
 						pos.Y += (UI.IconSize + 8);
 					}
