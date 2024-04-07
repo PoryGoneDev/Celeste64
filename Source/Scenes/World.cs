@@ -151,6 +151,8 @@ public class World : Scene
 
 		postTarget?.Dispose();
 		postTarget = null;
+
+		Game.Instance.ArchipelagoManager.OtherPlayers.Clear();
 	}
 
 	public T Request<T>() where T : Actor, IRecycle, new()
@@ -393,7 +395,65 @@ public class World : Scene
 		}
 
 		debugUpdTimer.Stop();
-	}
+
+
+		// Other Players
+		string OurPlayerName = Game.Instance.ArchipelagoManager.GetPlayerName(Game.Instance.ArchipelagoManager.Slot);
+		Game.Instance.ArchipelagoManager.AddToList("C64_OtherPlayers_List", OurPlayerName);
+
+		List<string> OtherPlayers;
+		Game.Instance.ArchipelagoManager.Read("C64_OtherPlayers_List", out OtherPlayers);
+
+		foreach(string otherPlayerName in OtherPlayers)
+        {
+            if (otherPlayerName == OurPlayerName)
+				continue;
+
+			string sublevel = "";
+            Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Map_{otherPlayerName}", out sublevel);
+
+			if (sublevel != Entry.Map)
+			{
+				continue;
+			}
+
+            if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayerName))
+			{
+				AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayerName];
+
+				Vector3? pos = null;
+				Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Pos_{otherPlayerName}", out pos);
+
+				if (pos is not null)
+				{
+					altPlayer.Position = pos.Value;
+                }
+
+                Vector2? face = null;
+                Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Face_{otherPlayerName}", out face);
+
+                if (face is not null)
+                {
+                    altPlayer.Facing = face.Value;
+                }
+            }
+			else
+			{
+				AltPlayer NewPlayer = new AltPlayer();
+
+				this.Add<AltPlayer>(NewPlayer);
+
+				Game.Instance.ArchipelagoManager.MessageLog.Add(new ArchipelagoMessage($"New Model {NewPlayer.ToString()}"));
+
+				Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayerName] = NewPlayer;
+			}
+		}
+
+		// Set our data
+		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Pos_{OurPlayerName}", Get<Player>().Position);
+		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Face_{OurPlayerName}", Get<Player>().Facing);
+		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Map_{OurPlayerName}", Entry.Map);
+    }
 
 	public void SetPaused(bool paused)
 	{

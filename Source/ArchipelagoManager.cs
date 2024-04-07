@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using Newtonsoft.Json.Linq;
+using System.Threading;
 
 namespace Celeste64;
 
@@ -67,6 +69,8 @@ public class ArchipelagoManager
     public int StrawberriesRequired { get; set; }
     public int DeathLinkAmnesty { get; set; }
     public int DeathsCounted = 0;
+
+    public Dictionary<string, AltPlayer> OtherPlayers = new Dictionary<string, AltPlayer> { };
 
     public static Dictionary<string, int> LocationStringToID { get; set; } = new Dictionary<string, int>
     {
@@ -561,4 +565,101 @@ public class ArchipelagoManager
             }
         }
     }
+
+    #region DataStorage
+    public void Set(string key, Vector3 value)
+    {
+        var token = JToken.FromObject(value);
+        _session.DataStorage[key] = token;
+    }
+
+    public void Read(string key, out Vector3? outValue)
+    {
+        try
+        {
+            var value = _session.DataStorage[key];
+            value.Initialize(0);
+            outValue = value.To<Vector3>();
+        }
+        catch (Exception ex)
+        {
+            outValue = null;
+            return;
+        }
+    }
+
+    public void Set(string key, Vector2 value)
+    {
+        var token = JToken.FromObject(value);
+        _session.DataStorage[key] = token;
+    }
+
+    public void Read(string key, out Vector2? outValue)
+    {
+        try
+        {
+            var value = _session.DataStorage[key];
+            value.Initialize(0);
+            outValue = value.To<Vector2>();
+        }
+        catch (Exception ex)
+        {
+            outValue = null;
+            return;
+        }
+    }
+
+    public void Set(string key, string value)
+    {
+        var token = JToken.FromObject(value);
+        _session.DataStorage[key] = token;
+    }
+
+    public void Read(string key, out string? outValue)
+    {
+        try
+        {
+            var value = _session.DataStorage[key];
+            value.Initialize("");
+            outValue = value.To<string>();
+        }
+        catch (Exception ex)
+        {
+            outValue = null;
+            return;
+        }
+    }
+
+    public void AddToList(string key, string value)
+    {
+        var currentValue = _session.DataStorage[key];
+        currentValue.Initialize(new List<string>());
+
+        var currentList = new List<string>();
+        if (currentValue is not null)
+            currentList = currentValue.To<List<string>>();
+
+        if (!currentList.Contains(value))
+            currentList.Add(value);
+
+            var token = JToken.FromObject(currentList);
+            _session.DataStorage[key] = token;
+    }
+
+    public void Read(string key, out List<string> outValue)
+    {
+        try
+        {
+            var value = _session.DataStorage[key];
+            value.Initialize(new List<string>());
+
+            outValue = value.To<List<string>>();
+        }
+        catch (Exception ex)
+        {
+            outValue = new List<string>();
+            return;
+        }
+    }
+    #endregion
 }
