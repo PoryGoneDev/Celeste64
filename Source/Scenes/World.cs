@@ -44,7 +44,9 @@ public class World : Scene
 	private float strawbCounterEase = 0;
 	private int strawbCounterWas;
 
-	private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
+    public float BadelineChaseTimer = 0;
+
+    private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
 	private bool IsPauseEnabled
 	{
 		get
@@ -361,8 +363,8 @@ public class World : Scene
 
 			GeneralTimer += Time.Delta;
 
-			// add / remove actors
-			ResolveChanges();
+            // add / remove actors
+            ResolveChanges();
 
 			// update all actors
 			var view = Camera.Frustum.GetBoundingBox().Inflate(10);
@@ -376,7 +378,19 @@ public class World : Scene
 			foreach (var actor in Actors)
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
-		}
+
+
+            BadelineChaseTimer += Time.Delta;
+
+            if (BadelineChaseTimer > 5.0f)
+            {
+                BadelineChaseTimer = 0.0f;
+
+                BadelineChase baddie = new BadelineChase();
+                baddie.Position = Get<Player>().Position + Vector3.UnitZ * 5.0f;
+                Actors.Add(new BadelineChase());
+            }
+        }
 		// unpause
 		else
 		{
