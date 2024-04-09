@@ -404,6 +404,9 @@ public class World : Scene
 		List<string> OtherPlayers;
 		Game.Instance.ArchipelagoManager.Read("C64_OtherPlayers_List", out OtherPlayers);
 
+		Log.Info("New Frame");
+
+		Log.Info($"Other Players: {OtherPlayers.ToString()}");
 		foreach(string otherPlayerName in OtherPlayers)
         {
             if (otherPlayerName == OurPlayerName)
@@ -412,10 +415,12 @@ public class World : Scene
 			string sublevel = "";
             Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Map_{otherPlayerName}", out sublevel);
 
-			if (sublevel != Entry.Map)
+            if (sublevel != Entry.Map)
 			{
 				continue;
-			}
+            }
+
+            Log.Info($"Checking Player {otherPlayerName}");
 
             if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayerName))
 			{

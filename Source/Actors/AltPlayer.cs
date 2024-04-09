@@ -29,6 +29,8 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
 			Model.Flags |= ModelFlags.Silhouette;
 			Model.Play("Idle");
 
+			Model.MakeMaterialsUnique();
+
 			foreach (var mat in Model.Materials)
 				mat.Effects = 0.60f;
 		}
