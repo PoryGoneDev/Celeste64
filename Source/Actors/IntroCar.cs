@@ -90,7 +90,7 @@ public class IntroCar : Solid
 		var step = Utils.Approach(Position, target, 20 * Time.Delta);
 		MoveTo(step);
 
-		if (hasRider)
+		if (hasRider && Game.Instance.ArchipelagoManager.Carsanity)
 		{
 			var index = this.scale == 6 ? 1 : 2;
 			Save.CurrentRecord.SetFlag($"Car{index}", 1);

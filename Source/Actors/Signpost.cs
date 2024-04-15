@@ -27,6 +27,9 @@ public class Signpost : NPC, IHaveModels
 	{
 		yield return Co.Run(cs.Face(World.Get<Player>(), Position));
 		yield return Co.Run(cs.Say(Loc.Lines(Conversation)));
-        Save.CurrentRecord.SetFlag(Conversation, 1);
-    }
+		if (Game.Instance.ArchipelagoManager.Signsanity)
+		{
+			Save.CurrentRecord.SetFlag(Conversation, 1);
+		}
+	}
 }
