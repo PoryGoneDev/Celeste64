@@ -100,6 +100,25 @@ public class ArchipelagoManager
         { "1-8/0", 0xCA001B },
         { "1-9/0", 0xCA001C },
         { "1-10/0", 0xCA001D },
+
+        { "Granny1", 0xCA0100 },
+        { "Granny2", 0xCA0101 },
+        { "Granny3", 0xCA0102 },
+        { "Theo1",   0xCA0103 },
+        { "Theo2",   0xCA0104 },
+        { "Theo3",   0xCA0105 },
+        { "Baddy1",  0xCA0106 },
+        { "Baddy2",  0xCA0107 },
+        { "Baddy3",  0xCA0108 },
+
+        { "Sign1", 0xCA0200 },
+        { "Sign2", 0xCA0201 },
+        { "Sign3", 0xCA0202 },
+        { "Sign4", 0xCA0203 },
+        { "CreditsSign", 0xCA0204 },
+
+        { "Car1", 0xCA0300 },
+        { "Car2", 0xCA0301 },
     };
 
     public static Dictionary<int, string> LocationIDToString { get; set; } = new Dictionary<int, string>
@@ -134,6 +153,26 @@ public class ArchipelagoManager
         { 0xCA001B, "1-8/0" },
         { 0xCA001C, "1-9/0" },
         { 0xCA001D, "1-10/0" },
+
+        // Don't need to !collect these
+        // { 0xCA0100, "Granny1" },
+        // { 0xCA0101, "Granny2" },
+        // { 0xCA0102, "Granny3" },
+        // { 0xCA0103, "Theo1" },
+        // { 0xCA0104, "Theo2" },
+        // { 0xCA0105, "Theo3" },
+        // { 0xCA0106, "Baddy1" },
+        // { 0xCA0107, "Baddy2" },
+        // { 0xCA0108, "Baddy3" },
+
+        // { 0xCA0200, "Sign1" },
+        // { 0xCA0201, "Sign2" },
+        // { 0xCA0202, "Sign3" },
+        // { 0xCA0203, "Sign4" },
+        // { 0xCA0204, "CreditsSign" },
+
+        // { 0xCA0300, "Car1" },
+        // { 0xCA0301, "Car2" },
     };
 
     public static Dictionary<long, string> ItemIDToString { get; set; } = new Dictionary<long, string>
@@ -146,7 +185,8 @@ public class ArchipelagoManager
         { 0xCA0005, "Cassettes" },
         { 0xCA0006, "Traffic Blocks" },
         { 0xCA0007, "Springs" },
-        { 0xCA0008, "Breakable Blocks" }
+        { 0xCA0008, "Breakable Blocks" },
+        { 0xCA0009, "Raspberry" }
     };
 
     private static string AP_JSON_FILE = "AP.json";
@@ -514,11 +554,29 @@ public class ArchipelagoManager
             }
         }
 
+        foreach (var nameIDPair in LocationStringToID)
+        {
+            if (Save.CurrentRecord.Strawberries.Contains(nameIDPair.Key))
+            {
+                continue;
+            }
+
+            if (Save.CurrentRecord.GetFlag(nameIDPair.Key) > 0)
+            {
+                long locationID = nameIDPair.Value;
+                if (!SentLocations.Contains(locationID))
+                {
+                    locationsToCheck.Add(locationID);
+                }
+            }
+        }
+
         CheckLocations(locationsToCheck.ToArray());
     }
 
     public void HandleCollectedLocations()
     {
+        // Change this if we need to !collect non-Strawberry locations
         foreach (var newLoc in CollectedLocations)
         {
             if (LocationIDToString.ContainsKey((int)newLoc))

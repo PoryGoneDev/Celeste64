@@ -23,6 +23,7 @@ public class BadelineChase : Actor, IHaveModels, IPickup, ICastPointShadow
         PointShadowAlpha = 1;
         LocalBounds = new BoundingBox(Vec3.Zero + Vec3.UnitZ * 4, 8);
 
+        Model.Flags |= ModelFlags.Silhouette;
         Model.Play("Bad.Idle");
 
 		foreach (var mat in Model.Materials)

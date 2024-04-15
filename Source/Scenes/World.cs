@@ -44,7 +44,11 @@ public class World : Scene
 	private float strawbCounterEase = 0;
 	private int strawbCounterWas;
 
-    public float BadelineChaseTimer = 0;
+    public int BadelineChaseTimer = 0;
+	public List<BadelineChase> BadelineChasers = [];
+	public List<Vector3> PlayerPosHistory = [];
+	public List<Vector2> PlayerRotHistory = [];
+	public bool PlayerHasMoved = false;
 
     private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
 	private bool IsPauseEnabled
@@ -143,6 +147,10 @@ public class World : Scene
 	public override void Disposed()
 	{
 		SetPaused(false);
+
+		BadelineChasers.Clear();
+		PlayerPosHistory.Clear();
+		PlayerRotHistory.Clear();
 
 		while (Actors.Count > 0)
 		{
@@ -380,16 +388,42 @@ public class World : Scene
 					actor.LateUpdate();
 
 
-            BadelineChaseTimer += Time.Delta;
-
-            if (BadelineChaseTimer > 5.0f)
+			// Badeline Chasers
+			if (Controls.Move.Value != Vec2.Zero ||
+				Controls.Jump.Pressed ||
+				Controls.Dash.Pressed)
             {
-                BadelineChaseTimer = 0.0f;
+				PlayerHasMoved = true;
+			}
 
-                BadelineChase baddie = new BadelineChase();
-                baddie.Position = Get<Player>().Position + Vector3.UnitZ * 5.0f;
-                Actors.Add(new BadelineChase());
-            }
+			if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+			{
+				if (BadelineChasers.Count() < 5)
+				{
+					BadelineChaseTimer += 1;
+
+					if (BadelineChaseTimer > 180)
+					{
+						BadelineChaseTimer = 0;
+
+						BadelineChase baddie = new BadelineChase();
+						baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
+						this.Add<BadelineChase>(baddie);
+						BadelineChasers.Add(baddie);
+					}
+				}
+
+				PlayerPosHistory.Add(Get<Player>().Position);
+				PlayerRotHistory.Add(Get<Player>().Facing);
+
+				for (int i = 0; i < BadelineChasers.Count(); i++)
+				{
+					BadelineChase baddie = BadelineChasers[i];
+
+					baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (180 * (i + 1))];
+					baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (180 * (i + 1))];
+				}
+			}
         }
 		// unpause
 		else
