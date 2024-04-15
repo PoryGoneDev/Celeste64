@@ -25,8 +25,11 @@ public class Granny : NPC
 
 		int index = Save.CurrentRecord.GetFlag(TALK_FLAG) + 1;
 		yield return Co.Run(cs.Say(Loc.Lines($"Granny{index}")));
-        Save.CurrentRecord.SetFlag($"Granny{index}", 1);
-        Save.CurrentRecord.IncFlag(TALK_FLAG);
+		if (Game.Instance.ArchipelagoManager.Friendsanity)
+		{
+			Save.CurrentRecord.SetFlag($"Granny{index}", 1);
+		}
+		Save.CurrentRecord.IncFlag(TALK_FLAG);
 		CheckForDialog();
 	}
 

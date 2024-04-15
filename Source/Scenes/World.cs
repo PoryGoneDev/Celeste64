@@ -387,44 +387,60 @@ public class World : Scene
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
 
-
 			// Badeline Chasers
-			if (Controls.Move.Value != Vec2.Zero ||
-				Controls.Jump.Pressed ||
-				Controls.Dash.Pressed)
-            {
-				PlayerHasMoved = true;
-			}
-
-			if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+			if(Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
 			{
-				if (BadelineChasers.Count() < 5)
+				if (Controls.Move.Value != Vec2.Zero ||
+					Controls.Jump.Pressed ||
+					Controls.Dash.Pressed)
 				{
-					BadelineChaseTimer += 1;
+					PlayerHasMoved = true;
+				}
 
-					if (BadelineChaseTimer > 180)
+				if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+				{
+					int BadelineCount = 0;
+
+					if (Game.Instance.ArchipelagoManager.BadelineSource == 0)
 					{
-						BadelineChaseTimer = 0;
+						BadelineCount = Game.Instance.ArchipelagoManager.LocationsCheckedCount() / Game.Instance.ArchipelagoManager.BadelineFrequency;
+					}
+					else if (Game.Instance.ArchipelagoManager.BadelineSource == 1)
+					{
+						BadelineCount = Save.CurrentRecord.GetFlag("Strawberries") / Game.Instance.ArchipelagoManager.BadelineFrequency;
+					}
 
-						BadelineChase baddie = new BadelineChase();
-						baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
-						this.Add<BadelineChase>(baddie);
-						BadelineChasers.Add(baddie);
+					int BadelineFrames = Game.Instance.ArchipelagoManager.BadelineSpeed * 60;
+
+					if (BadelineChasers.Count() < BadelineCount)
+					{
+						BadelineChaseTimer += 1;
+
+						if (BadelineChaseTimer > BadelineFrames)
+						{
+							BadelineChaseTimer = 0;
+
+							BadelineChase baddie = new BadelineChase();
+							baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
+							this.Add<BadelineChase>(baddie);
+							BadelineChasers.Add(baddie);
+						}
+					}
+
+					PlayerPosHistory.Add(Get<Player>().Position);
+					PlayerRotHistory.Add(Get<Player>().Facing);
+
+					for (int i = 0; i < BadelineChasers.Count(); i++)
+					{
+						BadelineChase baddie = BadelineChasers[i];
+
+						baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (BadelineFrames * (i + 1))];
+						baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (BadelineFrames * (i + 1))];
 					}
 				}
-
-				PlayerPosHistory.Add(Get<Player>().Position);
-				PlayerRotHistory.Add(Get<Player>().Facing);
-
-				for (int i = 0; i < BadelineChasers.Count(); i++)
-				{
-					BadelineChase baddie = BadelineChasers[i];
-
-					baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (180 * (i + 1))];
-					baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (180 * (i + 1))];
-				}
 			}
-        }
+
+		}
 		// unpause
 		else
 		{

@@ -65,6 +65,12 @@ public class ArchipelagoManager
 
 
     public int StrawberriesRequired { get; set; }
+    public bool Friendsanity { get; set; }
+    public bool Signsanity { get; set; }
+    public bool Carsanity { get; set; }
+    public int BadelineSource { get; set; }
+    public int BadelineFrequency { get; set; }
+    public int BadelineSpeed { get; set; }
     public int DeathLinkAmnesty { get; set; }
     public int DeathsCounted = 0;
 
@@ -263,6 +269,12 @@ public class ArchipelagoManager
 
         // Load randomizer data.
         StrawberriesRequired = Convert.ToInt32(((LoginSuccessful)result).SlotData["strawberries_required"]);
+        Friendsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["friendsanity"]);
+        Signsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["signsanity"]);
+        Carsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["carsanity"]);
+        BadelineSource = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_source"]);
+        BadelineFrequency = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_frequency"]);
+        BadelineSpeed = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_speed"]);
         DeathLinkAmnesty = Convert.ToInt32(((LoginSuccessful)result).SlotData["death_link_amnesty"]);
         bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData["death_link"]);
 
@@ -402,6 +414,11 @@ public class ArchipelagoManager
     {
         // Verify location exists first, we'll treat locations that don't exist as already checked.
         return !_session.Locations.AllLocations.Contains(id) || _session.Locations.AllLocationsChecked.Contains(id);
+    }
+
+    public int LocationsCheckedCount()
+    {
+        return _session.Locations.AllLocationsChecked.Count();
     }
 
     private void SendPacket(ArchipelagoPacketBase packet)
