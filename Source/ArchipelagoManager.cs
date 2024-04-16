@@ -68,6 +68,7 @@ public class ArchipelagoManager
     public bool Friendsanity { get; set; }
     public bool Signsanity { get; set; }
     public bool Carsanity { get; set; }
+    public bool MoveShuffle { get; set; }
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
     public int BadelineSpeed { get; set; }
@@ -192,7 +193,11 @@ public class ArchipelagoManager
         { 0xCA0006, "Traffic Blocks" },
         { 0xCA0007, "Springs" },
         { 0xCA0008, "Breakable Blocks" },
-        { 0xCA0009, "Raspberry" }
+        { 0xCA0009, "Raspberry" },
+        { 0xCA000A, "Grounded Dash" },
+        { 0xCA000B, "Air Dash" },
+        { 0xCA000C, "Skid Jump" },
+        { 0xCA000D, "Climb" },
     };
 
     private static string AP_JSON_FILE = "AP.json";
@@ -272,6 +277,7 @@ public class ArchipelagoManager
         Friendsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["friendsanity"]);
         Signsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["signsanity"]);
         Carsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["carsanity"]);
+        MoveShuffle = Convert.ToBoolean(((LoginSuccessful)result).SlotData["move_shuffle"]);
         BadelineSource = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_source"]);
         BadelineFrequency = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_frequency"]);
         BadelineSpeed = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_speed"]);
@@ -546,6 +552,22 @@ public class ArchipelagoManager
             else if (item.Item == 0xCA0008)
             {
                 Save.CurrentRecord.SetFlag("Breakables");
+            }
+            else if (item.Item == 0xCA000A)
+            {
+                Save.CurrentRecord.SetFlag("Grounded Dash");
+            }
+            else if (item.Item == 0xCA000B)
+            {
+                Save.CurrentRecord.SetFlag("Air Dash");
+            }
+            else if (item.Item == 0xCA000C)
+            {
+                Save.CurrentRecord.SetFlag("Skid Jump");
+            }
+            else if (item.Item == 0xCA000D)
+            {
+                Save.CurrentRecord.SetFlag("Climb");
             }
 
             Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
