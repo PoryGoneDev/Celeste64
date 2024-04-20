@@ -72,6 +72,8 @@ public class ArchipelagoManager
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
     public int BadelineSpeed { get; set; }
+    public bool BadelinesDisabled { get; set; }
+    public int BadelinesDisableTimer = 0;
     public int DeathLinkAmnesty { get; set; }
     public int DeathsCounted = 0;
 

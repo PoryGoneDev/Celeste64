@@ -390,52 +390,72 @@ public class World : Scene
 			// Badeline Chasers
 			if(Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
 			{
-				if (Controls.Move.Value != Vec2.Zero ||
-					Controls.Jump.Pressed ||
-					Controls.Dash.Pressed)
+				if (Controls.Move.Value == Vec2.Zero &&
+					Controls.Jump.Down &&
+					Controls.Cancel.Down &&
+					Controls.Climb.Down)
 				{
-					PlayerHasMoved = true;
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer += 1;
+
+					if (Game.Instance.ArchipelagoManager.BadelinesDisableTimer >= 180)
+					{
+						Game.Instance.ArchipelagoManager.BadelinesDisabled = !Game.Instance.ArchipelagoManager.BadelinesDisabled;
+					}
+				}
+				else
+				{
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer = 0;
 				}
 
-				if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+				if (!Game.Instance.ArchipelagoManager.BadelinesDisabled)
 				{
-					int BadelineCount = 0;
-
-					if (Game.Instance.ArchipelagoManager.BadelineSource == 0)
+					if (Controls.Move.Value != Vec2.Zero ||
+						Controls.Jump.Pressed ||
+						Controls.Dash.Pressed)
 					{
-						BadelineCount = Game.Instance.ArchipelagoManager.LocationsCheckedCount() / Game.Instance.ArchipelagoManager.BadelineFrequency;
-					}
-					else if (Game.Instance.ArchipelagoManager.BadelineSource == 1)
-					{
-						BadelineCount = Save.CurrentRecord.GetFlag("Strawberries") / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						PlayerHasMoved = true;
 					}
 
-					int BadelineFrames = Game.Instance.ArchipelagoManager.BadelineSpeed * 60;
-
-					if (BadelineChasers.Count() < BadelineCount)
+					if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
 					{
-						BadelineChaseTimer += 1;
+						int BadelineCount = 0;
 
-						if (BadelineChaseTimer > BadelineFrames)
+						if (Game.Instance.ArchipelagoManager.BadelineSource == 0)
 						{
-							BadelineChaseTimer = 0;
-
-							BadelineChase baddie = new BadelineChase();
-							baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
-							this.Add<BadelineChase>(baddie);
-							BadelineChasers.Add(baddie);
+							BadelineCount = Game.Instance.ArchipelagoManager.LocationsCheckedCount() / Game.Instance.ArchipelagoManager.BadelineFrequency;
 						}
-					}
+						else if (Game.Instance.ArchipelagoManager.BadelineSource == 1)
+						{
+							BadelineCount = Save.CurrentRecord.GetFlag("Strawberries") / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						}
 
-					PlayerPosHistory.Add(Get<Player>().Position);
-					PlayerRotHistory.Add(Get<Player>().Facing);
+						int BadelineFrames = Game.Instance.ArchipelagoManager.BadelineSpeed * 60;
 
-					for (int i = 0; i < BadelineChasers.Count(); i++)
-					{
-						BadelineChase baddie = BadelineChasers[i];
+						if (BadelineChasers.Count() < BadelineCount)
+						{
+							BadelineChaseTimer += 1;
 
-						baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (BadelineFrames * (i + 1))];
-						baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (BadelineFrames * (i + 1))];
+							if (BadelineChaseTimer > BadelineFrames)
+							{
+								BadelineChaseTimer = 0;
+
+								BadelineChase baddie = new BadelineChase();
+								baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
+								this.Add<BadelineChase>(baddie);
+								BadelineChasers.Add(baddie);
+							}
+						}
+
+						PlayerPosHistory.Add(Get<Player>().Position);
+						PlayerRotHistory.Add(Get<Player>().Facing);
+
+						for (int i = 0; i < BadelineChasers.Count(); i++)
+						{
+							BadelineChase baddie = BadelineChasers[i];
+
+							baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (BadelineFrames * (i + 1))];
+							baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (BadelineFrames * (i + 1))];
+						}
 					}
 				}
 			}
