@@ -69,6 +69,10 @@ public class Badeline : NPC
 
 		int index = Save.CurrentRecord.GetFlag(TALK_FLAG) + 1;
 		yield return Co.Run(cs.Say(Loc.Lines($"Baddy{index}")));
+		if (Game.Instance.ArchipelagoManager.Friendsanity)
+		{
+			Save.CurrentRecord.SetFlag($"Baddy{index}", 1);
+		}
 		Save.CurrentRecord.IncFlag(TALK_FLAG);
 		CheckForDialog();
 	}

@@ -44,7 +44,13 @@ public class World : Scene
 	private float strawbCounterEase = 0;
 	private int strawbCounterWas;
 
-	private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
+    public int BadelineChaseTimer = 0;
+	public List<BadelineChase> BadelineChasers = [];
+	public List<Vector3> PlayerPosHistory = [];
+	public List<Vector2> PlayerRotHistory = [];
+	public bool PlayerHasMoved = false;
+
+    private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
 	private bool IsPauseEnabled
 	{
 		get
@@ -141,6 +147,10 @@ public class World : Scene
 	public override void Disposed()
 	{
 		SetPaused(false);
+
+		BadelineChasers.Clear();
+		PlayerPosHistory.Clear();
+		PlayerRotHistory.Clear();
 
 		while (Actors.Count > 0)
 		{
@@ -361,8 +371,8 @@ public class World : Scene
 
 			GeneralTimer += Time.Delta;
 
-			// add / remove actors
-			ResolveChanges();
+            // add / remove actors
+            ResolveChanges();
 
 			// update all actors
 			var view = Camera.Frustum.GetBoundingBox().Inflate(10);
@@ -376,6 +386,80 @@ public class World : Scene
 			foreach (var actor in Actors)
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
+
+			// Badeline Chasers
+			if(Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
+			{
+				if (Controls.Move.Value == Vec2.Zero &&
+					Controls.Jump.Down &&
+					Controls.Cancel.Down &&
+					Controls.Climb.Down)
+				{
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer += 1;
+
+					if (Game.Instance.ArchipelagoManager.BadelinesDisableTimer >= 180)
+					{
+						Game.Instance.ArchipelagoManager.BadelinesDisabled = !Game.Instance.ArchipelagoManager.BadelinesDisabled;
+					}
+				}
+				else
+				{
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer = 0;
+				}
+
+				if (!Game.Instance.ArchipelagoManager.BadelinesDisabled)
+				{
+					if (Controls.Move.Value != Vec2.Zero ||
+						Controls.Jump.Pressed ||
+						Controls.Dash.Pressed)
+					{
+						PlayerHasMoved = true;
+					}
+
+					if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+					{
+						int BadelineCount = 0;
+
+						if (Game.Instance.ArchipelagoManager.BadelineSource == 0)
+						{
+							BadelineCount = Game.Instance.ArchipelagoManager.LocationsCheckedCount() / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						}
+						else if (Game.Instance.ArchipelagoManager.BadelineSource == 1)
+						{
+							BadelineCount = Save.CurrentRecord.GetFlag("Strawberries") / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						}
+
+						int BadelineFrames = Game.Instance.ArchipelagoManager.BadelineSpeed * 60;
+
+						if (BadelineChasers.Count() < BadelineCount)
+						{
+							BadelineChaseTimer += 1;
+
+							if (BadelineChaseTimer > BadelineFrames)
+							{
+								BadelineChaseTimer = 0;
+
+								BadelineChase baddie = new BadelineChase();
+								baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
+								this.Add<BadelineChase>(baddie);
+								BadelineChasers.Add(baddie);
+							}
+						}
+
+						PlayerPosHistory.Add(Get<Player>().Position);
+						PlayerRotHistory.Add(Get<Player>().Facing);
+
+						for (int i = 0; i < BadelineChasers.Count(); i++)
+						{
+							BadelineChase baddie = BadelineChasers[i];
+
+							baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (BadelineFrames * (i + 1))];
+							baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (BadelineFrames * (i + 1))];
+						}
+					}
+				}
+			}
+
 		}
 		// unpause
 		else

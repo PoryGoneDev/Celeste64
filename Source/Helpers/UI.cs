@@ -143,6 +143,52 @@ public static class UI
         {
             Icon(batch, "Traffic_Filled", "", pos, align);
         }
+        if (Game.Instance.ArchipelagoManager.MoveShuffle)
+        {
+            pos.X -= (UI.IconSize + 8);
+            pos.Y += (UI.IconSize + 8);
+            if (Save.CurrentRecord.GetFlag("Grounded Dash") == 0)
+            {
+                Icon(batch, "GroundDashGrey", "", pos, align);
+            }
+            else
+            {
+                Icon(batch, "GroundDash", "", pos, align);
+            }
+            pos.X += (UI.IconSize + 8);
+            if (Save.CurrentRecord.GetFlag("Air Dash") == 0)
+            {
+                Icon(batch, "AirDashGrey", "", pos, align);
+            }
+            else
+            {
+                Icon(batch, "AirDash", "", pos, align);
+            }
+            pos.X -= (UI.IconSize + 8);
+            pos.Y += (UI.IconSize + 8);
+            if (Save.CurrentRecord.GetFlag("Skid Jump") == 0)
+            {
+                Icon(batch, "SkidJumpGrey", "", pos, align);
+            }
+            else
+            {
+                Icon(batch, "SkidJump", "", pos, align);
+            }
+            pos.X += (UI.IconSize + 8);
+            if (Save.CurrentRecord.GetFlag("Climb") == 0)
+            {
+                Icon(batch, "ClimbGrey", "", pos, align);
+            }
+            else
+            {
+                Icon(batch, "Climb", "", pos, align);
+            }
+        }
+
+        if (Game.Instance.ArchipelagoManager.BadelinesDisabled)
+        {
+            Icon(batch, "BadelineDisabled", "", new Vector2(100, 10), align);
+        }
     }
 
     public static void Prompt(Batcher batch, VirtualButton button, string label, in Vec2 at, out float width, float align = 0)

@@ -875,6 +875,14 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryClimb()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (Save.CurrentRecord.GetFlag("Climb") == 0)
+			{
+				return false;
+			}
+		}
+
 		var result = ClimbCheckAt(Vec3.Zero, out var wall);
 
 		// let us snap up to walls if we're jumping for them
@@ -1256,6 +1264,19 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryDash()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (onGround && Save.CurrentRecord.GetFlag("Grounded Dash") == 0)
+			{
+				return false;
+			}
+
+			if (!onGround && Save.CurrentRecord.GetFlag("Air Dash") == 0)
+			{
+				return false;
+			}
+		}
+
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
 			dashes--;
@@ -1397,6 +1418,14 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private void StSkiddingUpdate()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (Save.CurrentRecord.GetFlag("Skid Jump") == 0)
+			{
+				tNoSkidJump = .1f;
+			}
+		}
+
 		if (tNoSkidJump > 0)
 			tNoSkidJump -= Time.Delta;
 
@@ -1491,10 +1520,13 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
-		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+        {
+            if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+            {
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+            }
 		}
 
 		CancelGroundSnap();
@@ -1784,9 +1816,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		// dashing
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+			if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+			{
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+			}
 		}
 	}
 
@@ -1891,9 +1926,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		// dashing
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+			if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+			{
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+			}
 		}
 
 		// start climbing
