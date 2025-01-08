@@ -15,9 +15,9 @@
   </PropertyGroup>
   <ItemGroup>
     <PackageReference Include="FosterFramework" Version="0.2.1" />
+    <PackageReference Include="Archipelago.MultiClient.Net" Version="6.5.0" />
     <PackageReference Include="SharpGLTF.Runtime" Version="1.0.0-alpha0031" />
     <PackageReference Include="Sledge.Formats.Map" Version="1.1.5" />
-    <PackageReference Include="Archipelago.MultiClient.Net" Version="5.0.6" />
   </ItemGroup>
 
   <PropertyGroup Condition="($(RuntimeIdentifier) == '' and $([MSBuild]::IsOSPlatform('Linux'))) or $(RuntimeIdentifier.StartsWith('linux'))">
