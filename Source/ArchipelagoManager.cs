@@ -51,9 +51,9 @@ public class ArchipelagoManager
     public DeathLink? DeathLinkData { get; private set; }
     public bool IsDeathLinkSafe { get; set; }
     public bool Ready { get; private set; }
-    public List<Tuple<int, NetworkItem>> ItemQueue { get; private set; } = new();
+    public List<Tuple<int, ItemInfo>> ItemQueue { get; private set; } = new();
     public List<long> CollectedLocations { get; private set; } = new();
-    public Dictionary<long, NetworkItem> LocationDictionary { get; private set; } = new();
+    public Dictionary<long, ItemInfo> LocationDictionary { get; private set; } = new();
     public HashSet<long> SentLocations { get; set; } = [];
     public List<ArchipelagoMessage> MessageLog { get; set; } = new();
 
@@ -472,9 +472,9 @@ public class ArchipelagoManager
     {
         var locations = await _session.Locations.ScoutLocationsAsync(false, _session.Locations.AllLocations.ToArray());
 
-        foreach (var item in locations.Locations)
+        foreach (var item in locations)
         {
-            LocationDictionary[item.Location] = item;
+            LocationDictionary[item.Key] = item.Value;
         }
     }
 
@@ -516,58 +516,58 @@ public class ArchipelagoManager
                 Audio.Play(Sfx.sfx_secret);
             }
 
-            Log.Info($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}.");
-            MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.Item]} from {GetPlayerName(item.Player)}."));
+            Log.Info($"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}.");
+            MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}."));
 
-            if (item.Item == 0xCA0000)
+            if (item.ItemId == 0xCA0000)
             {
                 Save.CurrentRecord.IncFlag("Strawberries");
             }
-            else if (item.Item == 0xCA0001)
+            else if (item.ItemId == 0xCA0001)
             {
                 Save.CurrentRecord.SetFlag("DashRefill");
             }
-            else if (item.Item == 0xCA0002)
+            else if (item.ItemId == 0xCA0002)
             {
                 Save.CurrentRecord.SetFlag("DoubleDashRefill");
             }
-            else if (item.Item == 0xCA0003)
+            else if (item.ItemId == 0xCA0003)
             {
                 Save.CurrentRecord.SetFlag("Feather");
             }
-            else if (item.Item == 0xCA0004)
+            else if (item.ItemId == 0xCA0004)
             {
                 Save.CurrentRecord.SetFlag("Coin");
             }
-            else if (item.Item == 0xCA0005)
+            else if (item.ItemId == 0xCA0005)
             {
                 Save.CurrentRecord.SetFlag("Cassette");
             }
-            else if (item.Item == 0xCA0006)
+            else if (item.ItemId == 0xCA0006)
             {
                 Save.CurrentRecord.SetFlag("TrafficBlock");
             }
-            else if (item.Item == 0xCA0007)
+            else if (item.ItemId == 0xCA0007)
             {
                 Save.CurrentRecord.SetFlag("Spring");
             }
-            else if (item.Item == 0xCA0008)
+            else if (item.ItemId == 0xCA0008)
             {
                 Save.CurrentRecord.SetFlag("Breakables");
             }
-            else if (item.Item == 0xCA000A)
+            else if (item.ItemId == 0xCA000A)
             {
                 Save.CurrentRecord.SetFlag("Grounded Dash");
             }
-            else if (item.Item == 0xCA000B)
+            else if (item.ItemId == 0xCA000B)
             {
                 Save.CurrentRecord.SetFlag("Air Dash");
             }
-            else if (item.Item == 0xCA000C)
+            else if (item.ItemId == 0xCA000C)
             {
                 Save.CurrentRecord.SetFlag("Skid Jump");
             }
-            else if (item.Item == 0xCA000D)
+            else if (item.ItemId == 0xCA000D)
             {
                 Save.CurrentRecord.SetFlag("Climb");
             }
