@@ -12,6 +12,7 @@ using System.Diagnostics;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
+using System.Xml.Linq;
 
 namespace Celeste64;
 
@@ -39,7 +40,7 @@ public struct ArchipelagoMessage
 
 public class ArchipelagoManager
 {
-    private static readonly Version _supportedArchipelagoVersion = new(0, 4, 3);
+    private static readonly Version _supportedArchipelagoVersion = new(7, 7, 7);
 
     private readonly ArchipelagoConnectionInfo _connectionInfo;
     private ArchipelagoSession? _session;
@@ -68,6 +69,7 @@ public class ArchipelagoManager
     public bool Friendsanity { get; set; }
     public bool Signsanity { get; set; }
     public bool Carsanity { get; set; }
+    public bool Checkpointsanity { get; set; }
     public bool MoveShuffle { get; set; }
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
@@ -128,6 +130,17 @@ public class ArchipelagoManager
 
         { "Car1", 0xCA0300 },
         { "Car2", 0xCA0301 },
+
+        { "Tutorial",         0xCA0400 },
+        { "After Tutorial",   0xCA0401 },
+        { "East Tower",       0xCA0402 },
+        { "Rooftop",          0xCA0403 },
+        { "Freeway",          0xCA0404 },
+        { "Freeway Feather",  0xCA0405 },
+        { "Feather Platform", 0xCA0406 },
+        { "Tower Entrance",   0xCA0407 },
+        { "Tower",            0xCA0408 },
+        { "Baddy Island",     0xCA0409 },
     };
 
     public static Dictionary<int, string> LocationIDToString { get; set; } = new Dictionary<int, string>
@@ -182,6 +195,17 @@ public class ArchipelagoManager
 
         // { 0xCA0300, "Car1" },
         // { 0xCA0301, "Car2" },
+
+        { 0xCA0400, "Tutorial" },
+        { 0xCA0401, "After Tutorial" },
+        { 0xCA0402, "East Tower" },
+        { 0xCA0403, "Rooftop" },
+        { 0xCA0404, "Freeway" },
+        { 0xCA0405, "Freeway Feather" },
+        { 0xCA0406, "Feather Platform" },
+        { 0xCA0407, "Tower Entrance" },
+        { 0xCA0408, "Tower" },
+        { 0xCA0409, "Baddy Island" },
     };
 
     public static Dictionary<long, string> ItemIDToString { get; set; } = new Dictionary<long, string>
@@ -200,6 +224,45 @@ public class ArchipelagoManager
         { 0xCA000B, "Air Dash" },
         { 0xCA000C, "Skid Jump" },
         { 0xCA000D, "Climb" },
+
+        { 0xCA0020, "Intro Checkpoint" },
+        { 0xCA0021, "Granny Checkpoint" },
+        { 0xCA0022, "South-East Tower Checkpoint" },
+        { 0xCA0023, "Climb Sign Checkpoint" },
+        { 0xCA0024, "Freeway Checkpoint" },
+        { 0xCA0025, "Freeway Feather Checkpoint" },
+        { 0xCA0026, "Feather Maze Checkpoint" },
+        { 0xCA0027, "Double Dash House Checkpoint" },
+        { 0xCA0028, "Badeline Tower Checkpoint" },
+        { 0xCA0029, "Badeline Island Checkpoint" },
+    };
+
+    public static Dictionary<string, string> CheckpointAPToInternal { get; set; } = new Dictionary<string, string>
+    {
+        { "Intro Checkpoint",             "Tutorial" },
+        { "Granny Checkpoint",            "After Tutorial" },
+        { "South-East Tower Checkpoint",  "East Tower" },
+        { "Climb Sign Checkpoint",        "Rooftop" },
+        { "Freeway Checkpoint",           "Freeway" },
+        { "Freeway Feather Checkpoint",   "Freeway Feather" },
+        { "Feather Maze Checkpoint",      "Feather Platform" },
+        { "Double Dash House Checkpoint", "Tower Entrance" },
+        { "Badeline Tower Checkpoint",    "Tower" },
+        { "Badeline Island Checkpoint",   "Baddy Island" },
+    };
+
+    public static Dictionary<string, string> CheckpointInternalToAP { get; set; } = new Dictionary<string, string>
+    {
+        { "Tutorial",         "Intro Checkpoint" },
+        { "After Tutorial",   "Granny Checkpoint" },
+        { "East Tower",       "South-East Tower Checkpoint" },
+        { "Rooftop",          "Climb Sign Checkpoint" },
+        { "Freeway",          "Freeway Checkpoint" },
+        { "Freeway Feather",  "Freeway Feather Checkpoint" },
+        { "Feather Platform", "Feather Maze Checkpoint" },
+        { "Tower Entrance",   "Double Dash House Checkpoint" },
+        { "Tower",            "Badeline Tower Checkpoint" },
+        { "Baddy Island",     "Badeline Island Checkpoint" },
     };
 
     private static string AP_JSON_FILE = "AP.json";
@@ -279,6 +342,7 @@ public class ArchipelagoManager
         Friendsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["friendsanity"]);
         Signsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["signsanity"]);
         Carsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["carsanity"]);
+        Checkpointsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["checkpointsanity"]);
         MoveShuffle = Convert.ToBoolean(((LoginSuccessful)result).SlotData["move_shuffle"]);
         BadelineSource = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_source"]);
         BadelineFrequency = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_frequency"]);
@@ -571,6 +635,12 @@ public class ArchipelagoManager
             {
                 Save.CurrentRecord.SetFlag("Climb");
             }
+            else if (item.ItemId >= 0xCA0020 && item.ItemId <= 0xCA0029)
+            {
+                string checkpointStr = ItemIDToString[item.ItemId];
+                string internalName = "Item_" + CheckpointAPToInternal[checkpointStr];
+                Save.CurrentRecord.SetFlag(internalName);
+            }
 
             Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
         }
@@ -622,19 +692,28 @@ public class ArchipelagoManager
         {
             if (LocationIDToString.ContainsKey((int)newLoc))
             {
-                string strawberryLocID = LocationIDToString[(int)newLoc];
-                if (!Save.CurrentRecord.Strawberries.Contains(strawberryLocID))
+                if (newLoc < 0xCA0400)
                 {
-                    Save.CurrentRecord.Strawberries.Add(strawberryLocID);
-                }
-
-                if (strawberryLocID.Contains("-"))
-                {
-                    string subMapID = strawberryLocID.Split("/")[0];
-                    if (!Save.CurrentRecord.CompletedSubMaps.Contains(subMapID))
+                    string strawberryLocID = LocationIDToString[(int)newLoc];
+                    if (!Save.CurrentRecord.Strawberries.Contains(strawberryLocID))
                     {
-                        Save.CurrentRecord.CompletedSubMaps.Add(subMapID);
+                        Save.CurrentRecord.Strawberries.Add(strawberryLocID);
                     }
+
+                    if (strawberryLocID.Contains("-"))
+                    {
+                        string subMapID = strawberryLocID.Split("/")[0];
+                        if (!Save.CurrentRecord.CompletedSubMaps.Contains(subMapID))
+                        {
+                            Save.CurrentRecord.CompletedSubMaps.Add(subMapID);
+                        }
+                    }
+                }
+                else if (newLoc < 0xCA0500)
+                {
+                    string locID = LocationIDToString[(int)newLoc];
+
+                    Save.CurrentRecord.SetFlag(locID);
                 }
             }
         }

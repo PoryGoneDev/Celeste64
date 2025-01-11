@@ -15,6 +15,7 @@
 		"PauseTitle": "Paused",
 		"PauseResume": "Resume",
 		"PauseRetry": "Retry",
+		"PauseCheckpoints": "Checkpoint Warp",
 		"PauseOptions": "Options",
 		"PauseSaveQuit": "Save & Quit",
 		"OptionsTitle": "Options",
@@ -23,7 +24,8 @@
 		"OptionsTimer": "Timer",
 		"OptionsBGM": "BGM",
 		"OptionsSFX": "SFX",
-		"OptionsInvertCamera": "Inverted Camera"
+		"OptionsInvertCamera": "Inverted Camera",
+		"CheckpointsTitle":  "Checkpoint Warp"
 	},
 	"Dialog":
 	{
