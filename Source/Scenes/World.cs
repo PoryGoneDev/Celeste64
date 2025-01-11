@@ -1,5 +1,6 @@
 using Archipelago.MultiClient.Net.Enums;
 using System.Diagnostics;
+using System.Xml.Linq;
 using ModelEntry = (Celeste64.Actor Actor, Celeste64.Model Model);
 
 namespace Celeste64;
@@ -49,6 +50,7 @@ public class World : Scene
 	public List<Vector3> PlayerPosHistory = [];
 	public List<Vector2> PlayerRotHistory = [];
 	public bool PlayerHasMoved = false;
+	public List<string> CheckpointHistory = [];
 
     private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
 	private bool IsPauseEnabled
@@ -97,7 +99,15 @@ public class World : Scene
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, (i) => Save.Instance.SetMusicVolume(Game, i)));
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, (i) => Save.Instance.SetSfxVolume(Game, i)));
 
-			pauseMenu.Title = Loc.Str("PauseTitle");
+            Menu checkpointsMenu = new Menu();
+            checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
+			foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
+            {
+				// TODO: Figure out to dynamically enable/disable these by item status
+                checkpointsMenu.Add(new Menu.Option(checkpoint.Key, () => WarpToCheckpoint(checkpoint.Value)));
+            }
+
+            pauseMenu.Title = Loc.Str("PauseTitle");
             pauseMenu.Add(new Menu.Option(Loc.Str("PauseResume"), () => SetPaused(false)));
 			pauseMenu.Add(new Menu.Option(Loc.Str("PauseRetry"), () =>
 			{
@@ -105,6 +115,7 @@ public class World : Scene
 				Audio.StopBus(Sfx.bus_dialog, false);
 				Get<Player>()?.Kill();
 			}));
+			pauseMenu.Add(new Menu.Submenu(Loc.Str("PauseCheckpoints"), pauseMenu, checkpointsMenu));
 			pauseMenu.Add(new Menu.Submenu(Loc.Str("PauseOptions"), pauseMenu, optionsMenu));
 			pauseMenu.Add(new Menu.Option(Loc.Str("PauseSaveQuit"), () => Game.Instance.Goto(new Transition()
 			{
@@ -392,8 +403,10 @@ public class World : Scene
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
 
-			// Badeline Chasers
-			if(Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
+			UpdateCheckpoints();
+
+            // Badeline Chasers
+            if (Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
 			{
 				if (Controls.Move.Value == Vec2.Zero &&
 					Controls.Jump.Down &&
@@ -1054,4 +1067,39 @@ public class World : Scene
 			it.Model.Render(ref state);
 		}
 	}
+
+	private void UpdateCheckpoints()
+	{
+		if (!this.Entry.Submap)
+		{
+			for (int i = this.CheckpointHistory.Count - 1; i >= 0; i--)
+            {
+                if (Save.CurrentRecord.GetFlag("Item_" + this.CheckpointHistory[i]) != 0)
+				{
+					this.Entry = this.Entry with { CheckPoint = this.CheckpointHistory[i] };
+					Save.CurrentRecord.Checkpoint = this.CheckpointHistory[i];
+
+					break;
+				}
+			}
+		}
+	}
+
+	public void AddCheckpointToHistory(string newCheckpoint)
+    {
+        this.CheckpointHistory.Remove(newCheckpoint);
+		this.CheckpointHistory.Add(newCheckpoint);
+
+    }
+
+	private void WarpToCheckpoint(string destCheckpoint)
+	{
+        var entry = this.Entry with { CheckPoint = destCheckpoint };
+        Game.Instance.Goto(new Transition()
+        {
+            Mode = Transition.Modes.Replace,
+            Scene = () => new World(entry),
+            ToBlack = new SpotlightWipe()
+        });
+    }
 }
