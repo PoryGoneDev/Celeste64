@@ -10,7 +10,7 @@ public class Menu(Controls controls)
 	public abstract class Item
 	{
 		public virtual string Label { get; } = string.Empty;
-		public virtual bool Selectable { get; } = true;
+		public virtual bool Selectable { get; set; } = true;
 		public virtual bool Pressed() => false;
 		public virtual void Slide(int dir) {}
 	}
@@ -135,7 +135,7 @@ public class Menu(Controls controls)
 	public string Title = string.Empty;
 	public bool Focused = true;
 
-	private readonly List<Item> items = [];
+	public readonly List<Item> items = [];
 	private readonly Stack<Menu> submenus = [];
 	private Time time;
 
@@ -209,7 +209,7 @@ public class Menu(Controls controls)
 				step = -1;
 	
 			Index += step;
-			while (!items[(items.Count + Index) % items.Count].Selectable)
+			while (!items[(items.Count + Index) % items.Count].Selectable && step != 0)
 				Index += step;
 			Index = (items.Count + Index) % items.Count;
 	
@@ -275,7 +275,7 @@ public class Menu(Controls controls)
 	
 			var text = items[i].Label;
 			var justify = new Vec2(0.5f, 0);
-			var color = Index == i && Focused ? (time.BetweenInterval(0.1f) ? 0x84FF54 : 0xFCFF59) : Color.White;
+			var color = Index == i && Focused ? (time.BetweenInterval(0.1f) ? 0x84FF54 : 0xFCFF59) : (items[i].Selectable ? Color.White : Color.Gray);
 			
 			UI.Text(batch, text, position, justify, color);
 	
