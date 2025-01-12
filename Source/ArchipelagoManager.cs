@@ -358,6 +358,10 @@ public class ArchipelagoManager
         Carsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["carsanity"]);
         Checkpointsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["checkpointsanity"]);
         MoveShuffle = Convert.ToBoolean(((LoginSuccessful)result).SlotData["move_shuffle"]);
+        Player.CNormal = Convert.ToInt32(((LoginSuccessful)result).SlotData["madeline_one_dash_hair_color"]);
+        Player.CTwoDashes = Convert.ToInt32(((LoginSuccessful)result).SlotData["madeline_two_dash_hair_color"]);
+        Player.CNoDash = Convert.ToInt32(((LoginSuccessful)result).SlotData["madeline_no_dash_hair_color"]);
+        Player.CFeather = Convert.ToInt32(((LoginSuccessful)result).SlotData["madeline_feather_hair_color"]);
         BadelineSource = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_source"]);
         BadelineFrequency = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_frequency"]);
         BadelineSpeed = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_speed"]);
