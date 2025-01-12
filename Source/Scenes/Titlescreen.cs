@@ -111,8 +111,9 @@ public class Titlescreen : Scene
                     UI.Text(batch, "CONNECTION FAILED", bounds.BottomCenter + new Vec2(-10, -4) * Game.RelativeScale, new Vec2(0, 1), Color.Red * 1f);
                 }
 
-				UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
-			}
+                UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -20) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                UI.Text(batch, Game.AP_VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+            }
 
 			if (easing < 1)
 			{

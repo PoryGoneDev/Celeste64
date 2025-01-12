@@ -18,6 +18,8 @@ Optionally, `Move Shuffle` can be activated, which also shuffles:
 - Skid Jump
 - Climb
 
+Additionally, `Checkpointsanity` can be activated, which also shuffles the ability to use and warp to checkpoints.
+
 The goal is to collect a certain number of Strawberries, then visit Badeline on her floating island.
 
 See the setup guide found [here](https://archipelago.gg/games/Celeste%2064/info/en).

@@ -37,7 +37,8 @@ public class World : Scene
 
 	// Pause Menu, only drawn when actually paused
 	private readonly Menu pauseMenu = new();
-	private AudioHandle pauseSnapshot;
+    private readonly Menu checkpointsMenu = new();
+    private AudioHandle pauseSnapshot;
 	
 	// makes the Strawberry UI wiggle when one is collected
 	private float strawbCounterWiggle = 0;
@@ -96,7 +97,6 @@ public class World : Scene
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, Save.Instance.SetMusicVolume));
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, Save.Instance.SetSfxVolume));
 
-            Menu checkpointsMenu = new Menu();
             checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
 			foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
             {
@@ -344,9 +344,11 @@ public class World : Scene
 		// toggle debug draw
 		if (Input.Keyboard.Pressed(Keys.F1))
 			DebugDraw = !DebugDraw;
-		
-		// normal game loop
-		if (!Paused)
+
+        UpdateCheckpoints();
+
+        // normal game loop
+        if (!Paused)
 		{
 			// start pause menu
 			if (Controls.Pause.ConsumePress() && IsPauseEnabled)
@@ -397,8 +399,6 @@ public class World : Scene
 			foreach (var actor in Actors)
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
-
-			UpdateCheckpoints();
 
             // Badeline Chasers
             if (Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
@@ -928,8 +928,9 @@ public class World : Scene
 
 				// show version number when paused / in ending area
 				if (IsInEndingArea || Paused)
-				{
-                    UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                {
+                    UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -20) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                    UI.Text(batch, Game.AP_VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
                 }
 			}
 
@@ -1015,8 +1016,42 @@ public class World : Scene
 					break;
 				}
 			}
-		}
-	}
+        }
+
+
+		bool anyActive = false;
+        for (int i = 0; i < ArchipelagoManager.CheckpointList.Count; i++)
+        {
+            if (!this.Entry.Submap && (Save.CurrentRecord.GetFlag("Item_" + ArchipelagoManager.CheckpointList[i]) != 0))
+            {
+                checkpointsMenu.items[i].Selectable = true;
+				anyActive = true;
+            }
+            else
+            {
+                checkpointsMenu.items[i].Selectable = false;
+
+				if (i == checkpointsMenu.Index)
+				{
+					checkpointsMenu.Index++;
+
+					if (checkpointsMenu.Index == checkpointsMenu.items.Count)
+					{
+						checkpointsMenu.Index = 0;
+                    }
+                }
+            }
+        }
+
+		if (!anyActive)
+		{
+			pauseMenu.items[2].Selectable = false;
+        }
+		else
+        {
+            pauseMenu.items[2].Selectable = true;
+        }
+    }
 
 	public void AddCheckpointToHistory(string newCheckpoint)
     {
@@ -1026,7 +1061,8 @@ public class World : Scene
     }
 
 	private void WarpToCheckpoint(string destCheckpoint)
-	{
+    {
+        SetPaused(false);
         var entry = this.Entry with { CheckPoint = destCheckpoint };
         Game.Instance.Goto(new Transition()
         {

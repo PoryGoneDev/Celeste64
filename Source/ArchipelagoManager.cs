@@ -265,6 +265,20 @@ public class ArchipelagoManager
         { "Baddy Island",     "Badeline Island Checkpoint" },
     };
 
+    public static List<string> CheckpointList { get; } = new List<string>
+    {
+        "Tutorial",
+        "After Tutorial",
+        "East Tower",
+        "Rooftop",
+        "Freeway",
+        "Freeway Feather",
+        "Feather Platform",
+        "Tower Entrance",
+        "Tower",
+        "Baddy Island",
+    };
+
     private static string AP_JSON_FILE = "AP.json";
     private static string? connectionInfoPath = null;
     public static string ConnectionInfoPath
