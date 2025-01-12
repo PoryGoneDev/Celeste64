@@ -66,11 +66,11 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private const float FeatherExitXYMult = .5f;
 	private const float FeatherExitZSpeed = 60;
 
-	static private readonly Color CNormal = 0xdb2c00;
-	static private readonly Color CNoDash = 0x6ec0ff;
-	static private readonly Color CTwoDashes = 0xfa91ff;
+	static public Color CNormal = 0xdb2c00;
+	static public Color CNoDash = 0x6ec0ff;
+	static public Color CTwoDashes = 0xfa91ff;
 	static private readonly Color CRefillFlash = Color.White;
-	static private readonly Color CFeather = 0xf2d450;
+	static public Color CFeather = 0xf2d450;
 
 	#endregion
 

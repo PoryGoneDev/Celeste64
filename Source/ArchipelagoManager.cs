@@ -362,6 +362,10 @@ public class ArchipelagoManager
         Signsanity            = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("signsanity", out value)                 ? value : false);
         Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
         MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
+        Player.CNormal        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_one_dash_hair_color", out value) ? value : 0xdb2c00);
+        Player.CTwoDashes     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_two_dash_hair_color", out value) ? value : 0xfa91ff);
+        Player.CNoDash        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_no_dash_hair_color", out value)  ? value : 0x6ec0ff);
+        Player.CFeather       = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_feather_hair_color", out value)  ? value : 0xf2d450);
         BadelineSource        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_source", out value)       ? value : 0);
         BadelineFrequency     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_frequency", out value)    ? value : 0);
         BadelineSpeed         = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_speed", out value)        ? value : 0);
