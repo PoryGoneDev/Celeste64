@@ -516,7 +516,27 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 				if (tDashResetFlash > 0)
 					color = CRefillFlash;
 				else if (dashes == 1)
-					color = CNormal;
+				{
+                    if (Game.Instance.ArchipelagoManager.MoveShuffle)
+                    {
+						if (onGround && (Save.CurrentRecord.GetFlag("Grounded Dash") == 0))
+						{
+                            color = CNoDash;
+						}
+						else if (!onGround && (Save.CurrentRecord.GetFlag("Air Dash") == 0))
+                        {
+                            color = CNoDash;
+                        }
+                        else
+                        {
+                            color = CNormal;
+                        }
+                    }
+					else
+					{
+						color = CNormal;
+					}
+				}
 				else if (dashes == 0)
 					color = CNoDash;
 				else
