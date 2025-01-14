@@ -66,11 +66,11 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private const float FeatherExitXYMult = .5f;
 	private const float FeatherExitZSpeed = 60;
 
-	static private readonly Color CNormal = 0xdb2c00;
-	static private readonly Color CNoDash = 0x6ec0ff;
-	static private readonly Color CTwoDashes = 0xfa91ff;
+	static public Color CNormal = 0xdb2c00;
+	static public Color CNoDash = 0x6ec0ff;
+	static public Color CTwoDashes = 0xfa91ff;
 	static private readonly Color CRefillFlash = Color.White;
-	static private readonly Color CFeather = 0xf2d450;
+	static public Color CFeather = 0xf2d450;
 
 	#endregion
 
@@ -516,7 +516,27 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 				if (tDashResetFlash > 0)
 					color = CRefillFlash;
 				else if (dashes == 1)
-					color = CNormal;
+				{
+                    if (Game.Instance.ArchipelagoManager.MoveShuffle)
+                    {
+						if (onGround && (Save.CurrentRecord.GetFlag("Grounded Dash") == 0))
+						{
+                            color = CNoDash;
+						}
+						else if (!onGround && (Save.CurrentRecord.GetFlag("Air Dash") == 0))
+                        {
+                            color = CNoDash;
+                        }
+                        else
+                        {
+                            color = CNormal;
+                        }
+                    }
+					else
+					{
+						color = CNormal;
+					}
+				}
 				else if (dashes == 0)
 					color = CNoDash;
 				else
@@ -875,6 +895,14 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryClimb()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (Save.CurrentRecord.GetFlag("Climb") == 0)
+			{
+				return false;
+			}
+		}
+
 		var result = ClimbCheckAt(Vec3.Zero, out var wall);
 
 		// let us snap up to walls if we're jumping for them
@@ -1256,6 +1284,19 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryDash()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (onGround && Save.CurrentRecord.GetFlag("Grounded Dash") == 0)
+			{
+				return false;
+			}
+
+			if (!onGround && Save.CurrentRecord.GetFlag("Air Dash") == 0)
+			{
+				return false;
+			}
+		}
+
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
 			dashes--;
@@ -1397,6 +1438,14 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private void StSkiddingUpdate()
 	{
+		if (Game.Instance.ArchipelagoManager.MoveShuffle)
+		{
+			if (Save.CurrentRecord.GetFlag("Skid Jump") == 0)
+			{
+				tNoSkidJump = .1f;
+			}
+		}
+
 		if (tNoSkidJump > 0)
 			tNoSkidJump -= Time.Delta;
 
@@ -1491,10 +1540,13 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
-		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+        {
+            if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+            {
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+            }
 		}
 
 		CancelGroundSnap();
@@ -1784,9 +1836,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		// dashing
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+			if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+			{
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+			}
 		}
 	}
 
@@ -1891,9 +1946,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		// dashing
 		if (dashes > 0 && tDashCooldown <= 0 && Controls.Dash.ConsumePress())
 		{
-			stateMachine.State = States.Dashing;
-			dashes--;
-			return;
+			if (!Game.Instance.ArchipelagoManager.MoveShuffle || Save.CurrentRecord.GetFlag("Air Dash") != 0)
+			{
+				stateMachine.State = States.Dashing;
+				dashes--;
+				return;
+			}
 		}
 
 		// start climbing

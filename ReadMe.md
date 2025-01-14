@@ -12,9 +12,17 @@ Ported to the Archipelago Multiworld framework in a week(ish) by PoryGone, this 
 - Springs
 - Breakable Blocks
 
+Optionally, `Move Shuffle` can be activated, which also shuffles:
+- Ground Dash
+- Air Dash
+- Skid Jump
+- Climb
+
+Additionally, `Checkpointsanity` can be activated, which also shuffles the ability to use and warp to checkpoints.
+
 The goal is to collect a certain number of Strawberries, then visit Badeline on her floating island.
 
-See the setup guide found within the `celeste64.apworld` file in the release for usage instructions.
+See the setup guide found [here](https://archipelago.gg/games/Celeste%2064/info/en).
 
 Original ReadMe follows:
 

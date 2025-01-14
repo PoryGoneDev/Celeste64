@@ -25,6 +25,10 @@ public class Theo : NPC
 
 		int index = Save.CurrentRecord.GetFlag(TALK_FLAG) + 1;
 		yield return Co.Run(cs.Say(Loc.Lines($"Theo{index}")));
+		if (Game.Instance.ArchipelagoManager.Friendsanity)
+		{
+			Save.CurrentRecord.SetFlag($"Theo{index}", 1);
+		}
 		Save.CurrentRecord.IncFlag(TALK_FLAG);
 		CheckForDialog();
 	}

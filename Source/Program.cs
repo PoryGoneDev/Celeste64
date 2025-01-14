@@ -9,6 +9,7 @@ class Program
 	public static void Main(string[] args)
 	{
 		Log.Info($"Celeste 64 v.{Game.Version.Major}.{Game.Version.Minor}.{Game.Version.Build}");
+		Log.Info($"Celeste 64 {Game.AP_VersionString}");
 
 		AppDomain.CurrentDomain.UnhandledException += (object sender, UnhandledExceptionEventArgs e) =>
 		{

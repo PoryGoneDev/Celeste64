@@ -1,5 +1,6 @@
 using Archipelago.MultiClient.Net.Enums;
 using System.Diagnostics;
+using System.Xml.Linq;
 using ModelEntry = (Celeste64.Actor Actor, Celeste64.Model Model);
 
 namespace Celeste64;
@@ -36,7 +37,8 @@ public class World : Scene
 
 	// Pause Menu, only drawn when actually paused
 	private readonly Menu pauseMenu = new();
-	private AudioHandle pauseSnapshot;
+    private readonly Menu checkpointsMenu = new();
+    private AudioHandle pauseSnapshot;
 	
 	// makes the Strawberry UI wiggle when one is collected
 	private float strawbCounterWiggle = 0;
@@ -44,7 +46,14 @@ public class World : Scene
 	private float strawbCounterEase = 0;
 	private int strawbCounterWas;
 
-	private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
+    public int BadelineChaseTimer = 0;
+	public List<BadelineChase> BadelineChasers = [];
+	public List<Vector3> PlayerPosHistory = [];
+	public List<Vector2> PlayerRotHistory = [];
+	public bool PlayerHasMoved = false;
+	public List<string> CheckpointHistory = [];
+
+    private bool IsInEndingArea => Get<Player>() is {} player && Overlaps<EndingArea>(player.Position);
 	private bool IsPauseEnabled
 	{
 		get
@@ -88,7 +97,14 @@ public class World : Scene
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, Save.Instance.SetMusicVolume));
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, Save.Instance.SetSfxVolume));
 
-			pauseMenu.Title = Loc.Str("PauseTitle");
+            checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
+			foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
+            {
+				// TODO: Figure out to dynamically enable/disable these by item status
+                checkpointsMenu.Add(new Menu.Option(checkpoint.Key, () => WarpToCheckpoint(checkpoint.Value)));
+            }
+
+            pauseMenu.Title = Loc.Str("PauseTitle");
             pauseMenu.Add(new Menu.Option(Loc.Str("PauseResume"), () => SetPaused(false)));
 			pauseMenu.Add(new Menu.Option(Loc.Str("PauseRetry"), () =>
 			{
@@ -96,6 +112,7 @@ public class World : Scene
 				Audio.StopBus(Sfx.bus_dialog, false);
 				Get<Player>()?.Kill();
 			}));
+			pauseMenu.Add(new Menu.Submenu(Loc.Str("PauseCheckpoints"), pauseMenu, checkpointsMenu));
 			pauseMenu.Add(new Menu.Submenu(Loc.Str("PauseOptions"), pauseMenu, optionsMenu));
 			pauseMenu.Add(new Menu.Option(Loc.Str("PauseSaveQuit"), () => Game.Instance.Goto(new Transition()
 			{
@@ -141,6 +158,10 @@ public class World : Scene
 	public override void Disposed()
 	{
 		SetPaused(false);
+
+		BadelineChasers.Clear();
+		PlayerPosHistory.Clear();
+		PlayerRotHistory.Clear();
 
 		while (Actors.Count > 0)
 		{
@@ -325,9 +346,11 @@ public class World : Scene
 		// toggle debug draw
 		if (Input.Keyboard.Pressed(Keys.F1))
 			DebugDraw = !DebugDraw;
-		
-		// normal game loop
-		if (!Paused)
+
+        UpdateCheckpoints();
+
+        // normal game loop
+        if (!Paused)
 		{
 			// start pause menu
 			if (Controls.Pause.ConsumePress() && IsPauseEnabled)
@@ -363,8 +386,8 @@ public class World : Scene
 
 			GeneralTimer += Time.Delta;
 
-			// add / remove actors
-			ResolveChanges();
+            // add / remove actors
+            ResolveChanges();
 
 			// update all actors
 			var view = Camera.Frustum.GetBoundingBox().Inflate(10);
@@ -378,6 +401,80 @@ public class World : Scene
 			foreach (var actor in Actors)
 				if (actor.UpdateOffScreen || actor.WorldBounds.Intersects(view))
 					actor.LateUpdate();
+
+            // Badeline Chasers
+            if (Game.Instance.ArchipelagoManager.BadelineFrequency > 0)
+			{
+				if (Controls.Move.Value == Vec2.Zero &&
+					Controls.Jump.Down &&
+					Controls.Cancel.Down &&
+					Controls.Climb.Down)
+				{
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer += 1;
+
+					if (Game.Instance.ArchipelagoManager.BadelinesDisableTimer >= 180)
+					{
+						Game.Instance.ArchipelagoManager.BadelinesDisabled = !Game.Instance.ArchipelagoManager.BadelinesDisabled;
+					}
+				}
+				else
+				{
+					Game.Instance.ArchipelagoManager.BadelinesDisableTimer = 0;
+				}
+
+				if (!Game.Instance.ArchipelagoManager.BadelinesDisabled)
+				{
+					if (Controls.Move.Value != Vec2.Zero ||
+						Controls.Jump.Pressed ||
+						Controls.Dash.Pressed)
+					{
+						PlayerHasMoved = true;
+					}
+
+					if (PlayerHasMoved && this.All<Cutscene>().Count == 0 && Get<Player>().IsAbleToPause)
+					{
+						int BadelineCount = 0;
+
+						if (Game.Instance.ArchipelagoManager.BadelineSource == 0)
+						{
+							BadelineCount = Game.Instance.ArchipelagoManager.LocationsCheckedCount() / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						}
+						else if (Game.Instance.ArchipelagoManager.BadelineSource == 1)
+						{
+							BadelineCount = Save.CurrentRecord.GetFlag("Strawberries") / Game.Instance.ArchipelagoManager.BadelineFrequency;
+						}
+
+						int BadelineFrames = Game.Instance.ArchipelagoManager.BadelineSpeed * 60;
+
+						if (BadelineChasers.Count() < BadelineCount)
+						{
+							BadelineChaseTimer += 1;
+
+							if (BadelineChaseTimer > BadelineFrames)
+							{
+								BadelineChaseTimer = 0;
+
+								BadelineChase baddie = new BadelineChase();
+								baddie.Position = Get<Player>().Position + Vector3.UnitZ * 30.0f;
+								this.Add<BadelineChase>(baddie);
+								BadelineChasers.Add(baddie);
+							}
+						}
+
+						PlayerPosHistory.Add(Get<Player>().Position);
+						PlayerRotHistory.Add(Get<Player>().Facing);
+
+						for (int i = 0; i < BadelineChasers.Count(); i++)
+						{
+							BadelineChase baddie = BadelineChasers[i];
+
+							baddie.Position = PlayerPosHistory[PlayerPosHistory.Count() - (BadelineFrames * (i + 1))];
+							baddie.Facing = PlayerRotHistory[PlayerRotHistory.Count() - (BadelineFrames * (i + 1))];
+						}
+					}
+				}
+			}
+
 		}
 		// unpause
 		else
@@ -896,8 +993,9 @@ public class World : Scene
 
 				// show version number when paused / in ending area
 				if (IsInEndingArea || Paused)
-				{
-                    UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                {
+                    UI.Text(batch, Game.VersionString, bounds.BottomLeft + new Vec2(4, -20) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
+                    UI.Text(batch, Game.AP_VersionString, bounds.BottomLeft + new Vec2(4, -4) * Game.RelativeScale, new Vec2(0, 1), Color.White * 0.25f);
                 }
 			}
 
@@ -968,4 +1066,74 @@ public class World : Scene
 			it.Model.Render(ref state);
 		}
 	}
+
+	private void UpdateCheckpoints()
+	{
+		if (!this.Entry.Submap)
+		{
+			for (int i = this.CheckpointHistory.Count - 1; i >= 0; i--)
+            {
+                if (Save.CurrentRecord.GetFlag("Item_" + this.CheckpointHistory[i]) != 0)
+				{
+					this.Entry = this.Entry with { CheckPoint = this.CheckpointHistory[i] };
+					Save.CurrentRecord.Checkpoint = this.CheckpointHistory[i];
+
+					break;
+				}
+			}
+        }
+
+
+		bool anyActive = false;
+        for (int i = 0; i < ArchipelagoManager.CheckpointList.Count; i++)
+        {
+            if (!this.Entry.Submap && (Save.CurrentRecord.GetFlag("Item_" + ArchipelagoManager.CheckpointList[i]) != 0))
+            {
+                checkpointsMenu.items[i].Selectable = true;
+				anyActive = true;
+            }
+            else
+            {
+                checkpointsMenu.items[i].Selectable = false;
+
+				if (i == checkpointsMenu.Index)
+				{
+					checkpointsMenu.Index++;
+
+					if (checkpointsMenu.Index == checkpointsMenu.items.Count)
+					{
+						checkpointsMenu.Index = 0;
+                    }
+                }
+            }
+        }
+
+		if (!anyActive)
+		{
+			pauseMenu.items[2].Selectable = false;
+        }
+		else
+        {
+            pauseMenu.items[2].Selectable = true;
+        }
+    }
+
+	public void AddCheckpointToHistory(string newCheckpoint)
+    {
+        this.CheckpointHistory.Remove(newCheckpoint);
+		this.CheckpointHistory.Add(newCheckpoint);
+
+    }
+
+	private void WarpToCheckpoint(string destCheckpoint)
+    {
+        SetPaused(false);
+        var entry = this.Entry with { CheckPoint = destCheckpoint };
+        Game.Instance.Goto(new Transition()
+        {
+            Mode = Transition.Modes.Replace,
+            Scene = () => new World(entry),
+            ToBlack = new SpotlightWipe()
+        });
+    }
 }

@@ -15,6 +15,7 @@
 		"PauseTitle": "Paused",
 		"PauseResume": "Resume",
 		"PauseRetry": "Retry",
+		"PauseCheckpoints": "Checkpoint Warp",
 		"PauseOptions": "Options",
 		"PauseSaveQuit": "Save & Quit",
 		"OptionsTitle": "Options",
@@ -23,7 +24,8 @@
 		"OptionsTimer": "Timer",
 		"OptionsBGM": "BGM",
 		"OptionsSFX": "SFX",
-		"OptionsInvertCamera": "Inverted Camera"
+		"OptionsInvertCamera": "Inverted Camera",
+		"CheckpointsTitle":  "Checkpoint Warp"
 	},
 	"Dialog":
 	{
@@ -765,6 +767,11 @@
 				"Face": "signpost",
 				"Voice": "credits/credits_12",
 				"Text": "Heidy would like to thank\nBrian for being awesome\nand Furi for being purrfect!"
+			},
+			{
+				"Face": "signpost",
+				"Voice": "sign/general_06",
+				"Text": "PoryGone would like to thank\nRaspberrySpaceJam and TheBulblaxEmpire\nfor ideas, testing, and friendship."
 			},
 			{
 				"Face": "signpost",

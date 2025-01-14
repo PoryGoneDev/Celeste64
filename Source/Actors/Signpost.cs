@@ -1,4 +1,6 @@
 ﻿
+using System;
+
 namespace Celeste64;
 
 public class Signpost : NPC, IHaveModels
@@ -25,5 +27,9 @@ public class Signpost : NPC, IHaveModels
 	{
 		yield return Co.Run(cs.Face(World.Get<Player>(), Position));
 		yield return Co.Run(cs.Say(Loc.Lines(Conversation)));
+		if (Game.Instance.ArchipelagoManager.Signsanity)
+		{
+			Save.CurrentRecord.SetFlag(Conversation, 1);
+		}
 	}
 }

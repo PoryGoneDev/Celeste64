@@ -1,4 +1,6 @@
 
+using System;
+
 namespace Celeste64;
 
 public class IntroCar : Solid
@@ -87,7 +89,13 @@ public class IntroCar : Solid
 		var target = (hasRider ? spawnPoint - Vec3.UnitZ * 1.5f : spawnPoint);
 		var step = Utils.Approach(Position, target, 20 * Time.Delta);
 		MoveTo(step);
-    }
+
+		if (hasRider && Game.Instance.ArchipelagoManager.Carsanity)
+		{
+			var index = this.scale == 6 ? 1 : 2;
+			Save.CurrentRecord.SetFlag($"Car{index}", 1);
+		}
+	}
 
     public override void CollectModels(List<(Actor Actor, Model Model)> populate)
     {
