@@ -9,11 +9,13 @@ using Archipelago.MultiClient.Net.Packets;
 using System.Text;
 using Archipelago.MultiClient.Net.Models;
 using System.Diagnostics;
+using System.Collections.Concurrent;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Newtonsoft.Json.Linq;
 using System.Threading;
+using Newtonsoft.Json;
 
 namespace Celeste64;
 
@@ -80,7 +82,6 @@ public class ArchipelagoManager
     public int DeathLinkAmnesty { get; set; }
     public int DeathsCounted = 0;
 
-    public Dictionary<string, AltPlayer> OtherPlayers = new Dictionary<string, AltPlayer> { };
 
     public static Dictionary<string, int> LocationStringToID { get; set; } = new Dictionary<string, int>
     {
@@ -378,6 +379,9 @@ public class ArchipelagoManager
         {
             _deathLinkService.EnableDeathLink();
         }
+
+        // TODO: Wrap this and only do if active
+        AddPlayerListCallback($"C64_OtherPlayers_List", PlayerListUpdated);
 
         // Build dictionary of locations with item information for fast lookup.
         await BuildLocationDictionary();
@@ -761,7 +765,81 @@ public class ArchipelagoManager
         }
     }
 
-    #region DataStorage
+    #region Multiplayer
+    public Dictionary<string, AltPlayer> OtherPlayers = new Dictionary<string, AltPlayer> { };
+    public Dictionary<string, string> otherPlayersData = [];
+    public List<string> TrackedPlayerNames = [];
+    public OtherPlayerData ourLastSetData;
+
+    private bool listCallbackSet = false;
+    public bool addedOurNameToList = false;
+
+    public struct OtherPlayerData
+    {
+        public string Name;
+        public string Sublevel;
+        public Vector2 Facing;
+        public Vector3 Position;
+        public string HairColor;
+
+        public bool RoughlyEqual(OtherPlayerData otherData)
+        {
+            if (this.Name == otherData.Name &&
+                this.Sublevel == otherData.Sublevel &&
+                (Vector2.Distance(this.Facing, otherData.Facing) < 0.1f) &&
+                (Vector3.Distance(this.Position, otherData.Position) < 0.1f) &&
+                this.HairColor == otherData.HairColor)
+            {
+                return true;
+            }
+
+            return false;
+        }
+    }
+
+    public void PlayerListUpdated(List<string> otherPlayerNames)
+    {
+        foreach (string otherPlayerName in otherPlayerNames)
+        {
+            if (otherPlayerName != GetPlayerName(Slot) && !TrackedPlayerNames.Contains(otherPlayerName))
+            {
+                Log.Info($"Adding callback for C64_OtherPlayer_{otherPlayerName}");
+                AddPlayerDataCallback($"C64_OtherPlayer_{otherPlayerName}", PlayerUpdated);
+                TrackedPlayerNames.Add(otherPlayerName);
+            }
+        }
+    }
+
+    public void PlayerUpdated(string key, JToken otherPlayer)
+    {
+        //Log.Info($"Player Updated: {key}");
+        otherPlayersData[key] = otherPlayer.ToString();
+    }
+
+
+
+    public void AddPlayerListCallback(string key, Action<List<string>> callback)
+    {
+        if (!listCallbackSet)
+        {
+            listCallbackSet = true;
+            //Log.Info($"Adding callback for C64_OtherPlayers_List");
+            _session.DataStorage[key].OnValueChanged += (oldData, newData, _) => {
+                List<string> otherPlayers = JsonConvert.DeserializeObject<List<string>>(newData.ToString());
+                callback(otherPlayers);
+            };
+        }
+    }
+
+    public void AddPlayerDataCallback(string key, Action<string, JToken> callback)
+    {
+        _session.DataStorage[key].OnValueChanged += (oldData, newData, _) => {
+            callback(key, newData);
+        };
+    }
+
+
+
     public void Set(string key, Vector3 value)
     {
         var token = JToken.FromObject(value);
@@ -822,6 +900,87 @@ public class ArchipelagoManager
         {
             outValue = null;
             return;
+        }
+    }
+
+    public void Set(string key, OtherPlayerData value)
+    {
+        var token = JToken.FromObject(value);
+        _session.DataStorage[key] = token;
+    }
+
+    public async Task<OtherPlayerData?> ReadPlayerDataAsync(string key)
+    {
+        try
+        {
+            _session.DataStorage[key].Initialize("");
+            var value = await _session.DataStorage[key].GetAsync<OtherPlayerData>();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            Log.Info($"Error Reading OtherPlayerData from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    public async Task<string?> ReadStringAsync(string key)
+    {
+        try
+        {
+            _session.DataStorage[key].Initialize("");
+            var value = await _session.DataStorage[key].GetAsync<string>();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            Log.Info($"Error Reading string from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    public async Task<List<string>> ReadListStringAsync(string key)
+    {
+        try
+        {
+            _session.DataStorage[key].Initialize(new List<string>());
+            var value = await _session.DataStorage[key].GetAsync<List<string>>();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            Log.Info($"Error Reading List<string> from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    public async Task<Vector2?> ReadVector2Async(string key)
+    {
+        try
+        {
+            _session.DataStorage[key].Initialize(0);
+            var value = await _session.DataStorage[key].GetAsync<Vector2>();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            Log.Info($"Error Reading Vector2 from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
+            return null;
+        }
+    }
+
+    public async Task<Vector3?> ReadVector3Async(string key)
+    {
+        try
+        {
+            _session.DataStorage[key].Initialize(0);
+            var value = await _session.DataStorage[key].GetAsync<Vector3>();
+            return value;
+        }
+        catch (Exception ex)
+        {
+            Log.Info($"Error Reading Vector3 from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
+            return null;
         }
     }
 

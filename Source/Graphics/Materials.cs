@@ -215,6 +215,7 @@ public class DefaultMaterial : Material
 	{
 		var copy = new DefaultMaterial(Texture);
 		CopyTo(copy);
+        copy.Name = Name;
         copy.MVP = MVP;
         copy.Model = model;
         copy.Texture = Texture;

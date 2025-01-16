@@ -14,10 +14,11 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
 
 
 	public AltPlayer()
-	{
-		PointShadowAlpha = 1.0f;
+    {
+        PointShadowAlpha = 1.0f;
 		LocalBounds = new BoundingBox(new Vec3(0, 0, 10), 10);
 		UpdateOffScreen = true;
+
 
 		// setup model
 		{

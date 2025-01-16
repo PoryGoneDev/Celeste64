@@ -1,6 +1,10 @@
 using Archipelago.MultiClient.Net.Enums;
+using Newtonsoft.Json.Linq;
+using Newtonsoft.Json;
+using System.Collections.Concurrent;
 using System.Diagnostics;
 using System.Xml.Linq;
+using static Celeste64.ArchipelagoManager;
 using ModelEntry = (Celeste64.Actor Actor, Celeste64.Model Model);
 
 namespace Celeste64;
@@ -100,7 +104,6 @@ public class World : Scene
             checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
 			foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
             {
-				// TODO: Figure out to dynamically enable/disable these by item status
                 checkpointsMenu.Add(new Menu.Option(checkpoint.Key, () => WarpToCheckpoint(checkpoint.Value)));
             }
 
@@ -493,68 +496,9 @@ public class World : Scene
 
 		debugUpdTimer.Stop();
 
-
-		// Other Players
-		string OurPlayerName = Game.Instance.ArchipelagoManager.GetPlayerName(Game.Instance.ArchipelagoManager.Slot);
-		Game.Instance.ArchipelagoManager.AddToList("C64_OtherPlayers_List", OurPlayerName);
-
-		List<string> OtherPlayers;
-		Game.Instance.ArchipelagoManager.Read("C64_OtherPlayers_List", out OtherPlayers);
-
-		Log.Info("New Frame");
-
-		Log.Info($"Other Players: {OtherPlayers.ToString()}");
-		foreach(string otherPlayerName in OtherPlayers)
-        {
-            if (otherPlayerName == OurPlayerName)
-				continue;
-
-			string sublevel = "";
-            Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Map_{otherPlayerName}", out sublevel);
-
-            if (sublevel != Entry.Map)
-			{
-				continue;
-            }
-
-            Log.Info($"Checking Player {otherPlayerName}");
-
-            if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayerName))
-			{
-				AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayerName];
-
-				Vector3? pos = null;
-				Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Pos_{otherPlayerName}", out pos);
-
-				if (pos is not null)
-				{
-					altPlayer.Position = pos.Value;
-                }
-
-                Vector2? face = null;
-                Game.Instance.ArchipelagoManager.Read($"C64_OtherPlayers_Face_{otherPlayerName}", out face);
-
-                if (face is not null)
-                {
-                    altPlayer.Facing = face.Value;
-                }
-            }
-			else
-			{
-				AltPlayer NewPlayer = new AltPlayer();
-
-				this.Add<AltPlayer>(NewPlayer);
-
-				Game.Instance.ArchipelagoManager.MessageLog.Add(new ArchipelagoMessage($"New Model {NewPlayer.ToString()}"));
-
-				Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayerName] = NewPlayer;
-			}
-		}
-
-		// Set our data
-		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Pos_{OurPlayerName}", Get<Player>().Position);
-		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Face_{OurPlayerName}", Get<Player>().Facing);
-		Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayers_Map_{OurPlayerName}", Entry.Map);
+		// TODO: Only call if multiplayer active
+		HandleOtherPlayers();
+        SetMultiplayerData();
     }
 
 	public void SetPaused(bool paused)
@@ -1108,7 +1052,9 @@ public class World : Scene
             }
         }
 
-		if (!anyActive)
+		Player? player = Get<Player>();
+
+        if (!anyActive || (player != null && !player.onGround))
 		{
 			pauseMenu.items[2].Selectable = false;
         }
@@ -1136,4 +1082,84 @@ public class World : Scene
             ToBlack = new SpotlightWipe()
         });
     }
+
+    #region Multiplayer
+    private void HandleOtherPlayers()
+    {
+        foreach (string otherPlayerToken in Game.Instance.ArchipelagoManager.otherPlayersData.Values)
+        {
+            OtherPlayerData otherPlayer = JsonConvert.DeserializeObject<OtherPlayerData>(otherPlayerToken);
+            if (otherPlayer.Sublevel == Entry.Map)
+			{
+				if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayer.Name) &&
+					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] != null)
+				{
+					AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name];
+
+					altPlayer.Position = otherPlayer.Position;
+					altPlayer.Facing = otherPlayer.Facing;
+					altPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
+				}
+				else
+				{
+					AltPlayer NewPlayer = new AltPlayer();
+					NewPlayer.Position = otherPlayer.Position;
+					NewPlayer.Facing = otherPlayer.Facing;
+					NewPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
+
+					this.Add<AltPlayer>(NewPlayer);
+
+					Game.Instance.ArchipelagoManager.MessageLog.Add(new ArchipelagoMessage($"New Model {NewPlayer.ToString()}"));
+
+					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] = NewPlayer;
+				}
+			}
+			else
+            {
+				if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayer.Name) &&
+					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] != null)
+                {
+                    AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name];
+					Destroy(altPlayer);
+					Game.Instance.ArchipelagoManager.OtherPlayers.Remove(otherPlayer.Name);
+                }
+            }
+        }
+    }
+
+	int FRAME_COUNT = 8;
+
+	private void SetMultiplayerData()
+    {
+		FRAME_COUNT--;
+
+		if (FRAME_COUNT > 0)
+		{
+			return;
+		}
+
+		FRAME_COUNT = 8;
+
+        string OurPlayerName = Game.Instance.ArchipelagoManager.GetPlayerName(Game.Instance.ArchipelagoManager.Slot);
+
+		if (!Game.Instance.ArchipelagoManager.addedOurNameToList)
+		{
+			Game.Instance.ArchipelagoManager.addedOurNameToList = true;
+            Game.Instance.ArchipelagoManager.AddToList("C64_OtherPlayers_List", OurPlayerName);
+		}
+
+        ArchipelagoManager.OtherPlayerData OurPlayerData = new ArchipelagoManager.OtherPlayerData();
+        OurPlayerData.Name = OurPlayerName;
+        OurPlayerData.Position = Get<Player>().Position;
+        OurPlayerData.Facing = Get<Player>().Facing;
+        OurPlayerData.Sublevel = Entry.Map;
+        OurPlayerData.HairColor = Get<Player>().Hair.Color.ToHexStringRGB();
+
+		if (!Game.Instance.ArchipelagoManager.ourLastSetData.RoughlyEqual(OurPlayerData))
+		{
+			Game.Instance.ArchipelagoManager.ourLastSetData = OurPlayerData;
+            Game.Instance.ArchipelagoManager.Set($"C64_OtherPlayer_{OurPlayerName}", OurPlayerData);
+		}
+    }
+    #endregion
 }
