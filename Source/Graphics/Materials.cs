@@ -54,9 +54,15 @@ public class DefaultMaterial : Material
     }
 
     public virtual DefaultMaterial Clone()
-	{
-		var copy = new DefaultMaterial(Texture);
-		CopyTo(copy);
+    {
+        var copy = new DefaultMaterial(Texture);
+        CopyTo(copy);
+        
+        copy.Name = Name;
+        copy.Texture = Texture;
+        copy.Color = Color;
+        copy.SilhouetteColor = SilhouetteColor;
+        
         return copy;
-	}
+    }
 }

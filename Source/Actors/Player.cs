@@ -111,7 +111,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private static Vec3 storedCameraForward;
 	private static float storedCameraDistance;
 
-	private enum States { Normal, Dashing, Skidding, Climbing, StrawbGet, FeatherStart, Feather, Respawn, Dead, StrawbReveal, Cutscene, Bubble, Cassette };
+	public enum States { Normal, Dashing, Skidding, Climbing, StrawbGet, FeatherStart, Feather, Respawn, Dead, StrawbReveal, Cutscene, Bubble, Cassette };
 	private enum Events { Land };
 
 	public bool Dead = false;
@@ -133,7 +133,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private Actor? climbingWallActor;
 	private Vec3 climbingWallNormal;
 
-	private bool onGround;
+	public bool onGround;
 	private Vec2 targetFacing = Vec2.UnitY;
 	private Vec3 cameraTargetForward = new(0, 1, 0);
 	private float cameraTargetDistance = 0.50f;
@@ -204,7 +204,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			Model.Flags |= ModelFlags.Silhouette;
 			Model.Play("Idle");
 
-			foreach (var mat in Model.Materials)
+            Model.MakeMaterialsUnique();
+
+            foreach (var mat in Model.Materials)
 				mat.Effects = 0.60f;
 		}
 
