@@ -7,11 +7,12 @@ namespace Celeste64;
 /// </summary>
 public class AltPlayer : Actor, IHaveModels, ICastPointShadow
 {
+	public string Name = "";
 	public Vec3 ModelScale = Vec3.One;
 	public SkinnedModel Model;
 	public readonly Hair Hair = new();
 	public float PointShadowAlpha { get; set; } = 1.0f;
-
+	public DateTime TimestampLastMoved = DateTime.MinValue;
 
 	public AltPlayer()
     {

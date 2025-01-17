@@ -763,7 +763,7 @@ public class ArchipelagoManager
 
     #region Multiplayer
     public Dictionary<string, AltPlayer> OtherPlayers = new Dictionary<string, AltPlayer> { };
-    public Dictionary<string, string> otherPlayersData = [];
+    public Dictionary<string, OtherPlayerData> otherPlayersData = [];
     public List<string> TrackedPlayerNames = [];
     public OtherPlayerData ourLastSetData;
 
@@ -778,6 +778,7 @@ public class ArchipelagoManager
         public Vector2 Facing;
         public Vector3 Position;
         public string HairColor;
+        public string Timestamp;
 
         public bool RoughlyEqual(OtherPlayerData otherData)
         {
@@ -817,7 +818,6 @@ public class ArchipelagoManager
         GetPacket packet = new GetPacket();
         packet.Keys = keys.ToArray();
 
-        //Task.Run(() => _session.Socket.SendPacketAsync(packet));
         _session.Socket.SendPacketAsync(packet);
     }
 
@@ -842,7 +842,7 @@ public class ArchipelagoManager
 
     public void PlayerUpdated(string key, JToken otherPlayer)
     {
-        otherPlayersData[key] = otherPlayer.ToString();
+        otherPlayersData[key] = otherPlayer.ToObject<OtherPlayerData>();
     }
 
     public void AddPlayerListCallback(string key, Action<List<string>> callback)
@@ -850,7 +850,6 @@ public class ArchipelagoManager
         if (!listCallbackSet)
         {
             listCallbackSet = true;
-            //Log.Info($"Adding callback for C64_OtherPlayers_List");
             _session.DataStorage[key].OnValueChanged += (oldData, newData, _) => {
                 List<string> otherPlayers = JsonConvert.DeserializeObject<List<string>>(newData.ToString());
                 callback(otherPlayers);
@@ -858,157 +857,10 @@ public class ArchipelagoManager
         }
     }
 
-    public void AddPlayerDataCallback(string key, Action<string, JToken> callback)
-    {
-        _session.DataStorage[key].OnValueChanged += (oldData, newData, _) => {
-            callback(key, newData);
-        };
-    }
-
-
-
-    public void Set(string key, Vector3 value)
-    {
-        var token = JToken.FromObject(value);
-        _session.DataStorage[key] = token;
-    }
-
-    public void Read(string key, out Vector3? outValue)
-    {
-        try
-        {
-            var value = _session.DataStorage[key];
-            value.Initialize(0);
-            outValue = value.To<Vector3>();
-        }
-        catch (Exception ex)
-        {
-            outValue = null;
-            return;
-        }
-    }
-
-    public void Set(string key, Vector2 value)
-    {
-        var token = JToken.FromObject(value);
-        _session.DataStorage[key] = token;
-    }
-
-    public void Read(string key, out Vector2? outValue)
-    {
-        try
-        {
-            var value = _session.DataStorage[key];
-            value.Initialize(0);
-            outValue = value.To<Vector2>();
-        }
-        catch (Exception ex)
-        {
-            outValue = null;
-            return;
-        }
-    }
-
-    public void Set(string key, string value)
-    {
-        var token = JToken.FromObject(value);
-        _session.DataStorage[key] = token;
-    }
-
-    public void Read(string key, out string? outValue)
-    {
-        try
-        {
-            var value = _session.DataStorage[key];
-            value.Initialize("");
-            outValue = value.To<string>();
-        }
-        catch (Exception ex)
-        {
-            outValue = null;
-            return;
-        }
-    }
-
     public void Set(string key, OtherPlayerData value)
     {
         var token = JToken.FromObject(value);
         _session.DataStorage[key] = token;
-    }
-
-    public async Task<OtherPlayerData?> ReadPlayerDataAsync(string key)
-    {
-        try
-        {
-            _session.DataStorage[key].Initialize("");
-            var value = await _session.DataStorage[key].GetAsync<OtherPlayerData>();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            Log.Info($"Error Reading OtherPlayerData from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    public async Task<string?> ReadStringAsync(string key)
-    {
-        try
-        {
-            _session.DataStorage[key].Initialize("");
-            var value = await _session.DataStorage[key].GetAsync<string>();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            Log.Info($"Error Reading string from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    public async Task<List<string>> ReadListStringAsync(string key)
-    {
-        try
-        {
-            _session.DataStorage[key].Initialize(new List<string>());
-            var value = await _session.DataStorage[key].GetAsync<List<string>>();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            Log.Info($"Error Reading List<string> from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    public async Task<Vector2?> ReadVector2Async(string key)
-    {
-        try
-        {
-            _session.DataStorage[key].Initialize(0);
-            var value = await _session.DataStorage[key].GetAsync<Vector2>();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            Log.Info($"Error Reading Vector2 from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
-            return null;
-        }
-    }
-
-    public async Task<Vector3?> ReadVector3Async(string key)
-    {
-        try
-        {
-            _session.DataStorage[key].Initialize(0);
-            var value = await _session.DataStorage[key].GetAsync<Vector3>();
-            return value;
-        }
-        catch (Exception ex)
-        {
-            Log.Info($"Error Reading Vector3 from DataStorage key [{key}].{Environment.NewLine}Message: {ex.Message}{Environment.NewLine}Stack Trace: {ex.StackTrace}");
-            return null;
-        }
     }
 
     public void AddToList(string key, string value)
@@ -1025,22 +877,6 @@ public class ArchipelagoManager
 
             var token = JToken.FromObject(currentList);
             _session.DataStorage[key] = token;
-    }
-
-    public void Read(string key, out List<string> outValue)
-    {
-        try
-        {
-            var value = _session.DataStorage[key];
-            value.Initialize(new List<string>());
-
-            outValue = value.To<List<string>>();
-        }
-        catch (Exception ex)
-        {
-            outValue = new List<string>();
-            return;
-        }
     }
     #endregion
 }

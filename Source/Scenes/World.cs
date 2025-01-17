@@ -1094,18 +1094,30 @@ public class World : Scene
 		{
 			AltPlayer altPlayer = altPlayerActor as AltPlayer;
 
-			if (altPlayer != null && !Game.Instance.ArchipelagoManager.OtherPlayers.ContainsValue(altPlayer))
-            {
-                if (altPlayer.World == this)
+			if (altPlayer != null)
+			{
+				if (!Game.Instance.ArchipelagoManager.OtherPlayers.ContainsValue(altPlayer))
+				{
+					if (altPlayer.World == this)
+					{
+						Destroy(altPlayer);
+					}
+				}
+
+				if ((altPlayer.TimestampLastMoved != DateTime.MinValue) &&
+                    (DateTime.Now - altPlayer.TimestampLastMoved).TotalMinutes > 2.0f)
                 {
-                    Destroy(altPlayer);
+                    Game.Instance.ArchipelagoManager.OtherPlayers.Remove(altPlayer.Name);
+                    if (altPlayer.World == this)
+                    {
+                        Destroy(altPlayer);
+                    }
                 }
             }
 		}
 
-        foreach (string otherPlayerToken in Game.Instance.ArchipelagoManager.otherPlayersData.Values)
+        foreach (OtherPlayerData otherPlayer in Game.Instance.ArchipelagoManager.otherPlayersData.Values)
         {
-            OtherPlayerData otherPlayer = JsonConvert.DeserializeObject<OtherPlayerData>(otherPlayerToken);
             if (otherPlayer.Sublevel == Entry.Map)
 			{
 				if (Game.Instance.ArchipelagoManager.OtherPlayers.Keys.Contains(otherPlayer.Name) &&
@@ -1113,22 +1125,30 @@ public class World : Scene
 				{
 					AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name];
 
+					altPlayer.Name = otherPlayer.Name;
 					altPlayer.Position = otherPlayer.Position;
 					altPlayer.Facing = otherPlayer.Facing;
 					altPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
+					altPlayer.TimestampLastMoved = DateTime.Parse(otherPlayer.Timestamp);
 				}
 				else
-				{
-					AltPlayer NewPlayer = new AltPlayer();
-					NewPlayer.Position = otherPlayer.Position;
-					NewPlayer.Facing = otherPlayer.Facing;
-					NewPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
+                {
+					DateTime otherPlayerTimestamp = DateTime.Parse(otherPlayer.Timestamp);
+                    if ((otherPlayerTimestamp != DateTime.MinValue) &&
+						(DateTime.Now - otherPlayerTimestamp).TotalMinutes > 2.0f)
+					{
+						continue;
+					}
 
-					this.Add<AltPlayer>(NewPlayer);
+                    AltPlayer newPlayer = new AltPlayer();
+					newPlayer.Name = otherPlayer.Name;
+					newPlayer.Position = otherPlayer.Position;
+					newPlayer.Facing = otherPlayer.Facing;
+					newPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
+                    newPlayer.TimestampLastMoved = otherPlayerTimestamp;
 
-					Game.Instance.ArchipelagoManager.MessageLog.Add(new ArchipelagoMessage($"New Model {NewPlayer.ToString()}"));
-
-					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] = NewPlayer;
+                    this.Add<AltPlayer>(newPlayer);
+					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] = newPlayer;
 				}
 			}
 			else
@@ -1147,18 +1167,16 @@ public class World : Scene
         }
 
         FRAME_COUNT--;
-
         if (FRAME_COUNT > 0)
         {
+			// Frame Buffer, otherwise the response queue builds up lag over time
             return;
         }
-
         FRAME_COUNT = 2;
 
         // Request updated data
         Game.Instance.ArchipelagoManager.RequestPlayerData();
     }
-
 	int FRAME_COUNT = 2;
 
 	private void SetMultiplayerData()
@@ -1182,6 +1200,7 @@ public class World : Scene
         OurPlayerData.Facing = Get<Player>().Facing;
         OurPlayerData.Sublevel = Entry.Map;
         OurPlayerData.HairColor = Get<Player>().Hair.Color.ToHexStringRGB();
+        OurPlayerData.Timestamp = DateTime.Now.ToString();
 
 		if (!Game.Instance.ArchipelagoManager.ourLastSetData.RoughlyEqual(OurPlayerData))
 		{
