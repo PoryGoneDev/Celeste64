@@ -103,6 +103,7 @@ public class Game : App
             Url = AP_Conn?.Url,
             SlotName = AP_Conn?.SlotName,
             Password = AP_Conn?.Password,
+            SeeGhosts = AP_Conn?.SeeGhosts == true,
         });
 
         var result = ArchipelagoManager.TryConnect().Result;
