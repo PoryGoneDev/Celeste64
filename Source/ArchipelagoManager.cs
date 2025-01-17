@@ -29,6 +29,7 @@ public record ArchipelagoConnectionInfo
     public string Url { get; init; } = "wss://archipelago.gg:38281";
     public string SlotName { get; init; } = "Madeline";
     public string Password { get; init; } = "";
+    public bool SeeGhosts { get; init; } = false;
 }
 public struct ArchipelagoMessage
 {
@@ -582,11 +583,6 @@ public class ArchipelagoManager
         }
     }
 
-    private void OnPacketReceived(ArchipelagoPacketBase packet)
-    {
-
-    }
-
     private static void OnError(Exception exception, string message)
     {
 
@@ -773,6 +769,7 @@ public class ArchipelagoManager
 
     private bool listCallbackSet = false;
     public bool addedOurNameToList = false;
+    public bool GhostPlayersActive => _connectionInfo.SeeGhosts;
 
     public struct OtherPlayerData
     {
@@ -803,20 +800,50 @@ public class ArchipelagoManager
         {
             if (otherPlayerName != GetPlayerName(Slot) && !TrackedPlayerNames.Contains(otherPlayerName))
             {
-                Log.Info($"Adding callback for C64_OtherPlayer_{otherPlayerName}");
-                AddPlayerDataCallback($"C64_OtherPlayer_{otherPlayerName}", PlayerUpdated);
                 TrackedPlayerNames.Add(otherPlayerName);
+            }
+        }
+    }
+
+    public void RequestPlayerData()
+    {
+        List<string> keys = new List<string>();
+
+        foreach (string name in TrackedPlayerNames)
+        {
+            keys.Add($"C64_OtherPlayer_{name}");
+        }
+
+        GetPacket packet = new GetPacket();
+        packet.Keys = keys.ToArray();
+
+        //Task.Run(() => _session.Socket.SendPacketAsync(packet));
+        _session.Socket.SendPacketAsync(packet);
+    }
+
+    private void OnPacketReceived(ArchipelagoPacketBase packet)
+    {
+        if (packet.PacketType == ArchipelagoPacketType.Retrieved)
+        {
+            if (_connectionInfo.SeeGhosts)
+            {
+                RetrievedPacket retPacket = packet as RetrievedPacket;
+
+                foreach (KeyValuePair<string, JToken> entry in retPacket.Data)
+                {
+                    if (entry.Key.StartsWith("C64_OtherPlayer_"))
+                    {
+                        PlayerUpdated(entry.Key, entry.Value);
+                    }
+                }
             }
         }
     }
 
     public void PlayerUpdated(string key, JToken otherPlayer)
     {
-        //Log.Info($"Player Updated: {key}");
         otherPlayersData[key] = otherPlayer.ToString();
     }
-
-
 
     public void AddPlayerListCallback(string key, Action<List<string>> callback)
     {

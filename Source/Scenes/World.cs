@@ -352,6 +352,12 @@ public class World : Scene
 
         UpdateCheckpoints();
 
+        if (Game.Instance.ArchipelagoManager.GhostPlayersActive)
+        {
+            HandleOtherPlayers();
+            SetMultiplayerData();
+        }
+
         // normal game loop
         if (!Paused)
 		{
@@ -495,10 +501,6 @@ public class World : Scene
 		}
 
 		debugUpdTimer.Stop();
-
-		// TODO: Only call if multiplayer active
-		HandleOtherPlayers();
-        SetMultiplayerData();
     }
 
 	public void SetPaused(bool paused)
@@ -1086,6 +1088,21 @@ public class World : Scene
     #region Multiplayer
     private void HandleOtherPlayers()
     {
+		List<Actor> allAltPlayers = GetTypesOf<AltPlayer>();
+
+		foreach (Actor altPlayerActor in allAltPlayers)
+		{
+			AltPlayer altPlayer = altPlayerActor as AltPlayer;
+
+			if (altPlayer != null && !Game.Instance.ArchipelagoManager.OtherPlayers.ContainsValue(altPlayer))
+            {
+                if (altPlayer.World == this)
+                {
+                    Destroy(altPlayer);
+                }
+            }
+		}
+
         foreach (string otherPlayerToken in Game.Instance.ArchipelagoManager.otherPlayersData.Values)
         {
             OtherPlayerData otherPlayer = JsonConvert.DeserializeObject<OtherPlayerData>(otherPlayerToken);
@@ -1120,32 +1137,43 @@ public class World : Scene
 					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] != null)
                 {
                     AltPlayer altPlayer = Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name];
-					Destroy(altPlayer);
+					if (altPlayer != null && altPlayer.World == this)
+					{
+						Destroy(altPlayer);
+					}
 					Game.Instance.ArchipelagoManager.OtherPlayers.Remove(otherPlayer.Name);
                 }
             }
         }
+
+        FRAME_COUNT--;
+
+        if (FRAME_COUNT > 0)
+        {
+            return;
+        }
+
+        FRAME_COUNT = 2;
+
+        // Request updated data
+        Game.Instance.ArchipelagoManager.RequestPlayerData();
     }
 
-	int FRAME_COUNT = 8;
+	int FRAME_COUNT = 2;
 
 	private void SetMultiplayerData()
     {
-		FRAME_COUNT--;
-
-		if (FRAME_COUNT > 0)
-		{
-			return;
-		}
-
-		FRAME_COUNT = 8;
-
         string OurPlayerName = Game.Instance.ArchipelagoManager.GetPlayerName(Game.Instance.ArchipelagoManager.Slot);
 
 		if (!Game.Instance.ArchipelagoManager.addedOurNameToList)
 		{
 			Game.Instance.ArchipelagoManager.addedOurNameToList = true;
             Game.Instance.ArchipelagoManager.AddToList("C64_OtherPlayers_List", OurPlayerName);
+		}
+
+		if (Get<Player>() == null)
+		{
+			return;
 		}
 
         ArchipelagoManager.OtherPlayerData OurPlayerData = new ArchipelagoManager.OtherPlayerData();
