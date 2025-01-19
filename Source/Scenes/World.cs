@@ -315,6 +315,7 @@ public class World : Scene
 			{
 				if (Save.CurrentRecord.GetFlag("Strawberries") >= Game.Instance.ArchipelagoManager.StrawberriesRequired)
 				{
+					Game.Instance.ArchipelagoManager.GoalSent = true;
 					Game.Instance.ArchipelagoManager.UpdateGameStatus(ArchipelagoClientState.ClientGoal);
 				}
 			}
