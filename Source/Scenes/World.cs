@@ -1106,7 +1106,7 @@ public class World : Scene
 				}
 
 				if ((altPlayer.TimestampLastMoved != DateTime.MinValue) &&
-                    (DateTime.Now - altPlayer.TimestampLastMoved).TotalMinutes > 2.0f)
+                    (DateTime.UtcNow - altPlayer.TimestampLastMoved).TotalMinutes > 2.0f)
                 {
                     Game.Instance.ArchipelagoManager.OtherPlayers.Remove(altPlayer.Name);
                     if (altPlayer.World == this)
@@ -1136,7 +1136,7 @@ public class World : Scene
                 {
 					DateTime otherPlayerTimestamp = DateTime.Parse(otherPlayer.Timestamp);
                     if ((otherPlayerTimestamp != DateTime.MinValue) &&
-						(DateTime.Now - otherPlayerTimestamp).TotalMinutes > 2.0f)
+						(DateTime.UtcNow - otherPlayerTimestamp).TotalMinutes > 2.0f)
 					{
 						continue;
 					}
@@ -1201,7 +1201,7 @@ public class World : Scene
         OurPlayerData.Facing = Get<Player>().Facing;
         OurPlayerData.Sublevel = Entry.Map;
         OurPlayerData.HairColor = Get<Player>().Hair.Color.ToHexStringRGB();
-        OurPlayerData.Timestamp = DateTime.Now.ToString();
+        OurPlayerData.Timestamp = DateTime.UtcNow.ToString();
 
 		if (!Game.Instance.ArchipelagoManager.ourLastSetData.RoughlyEqual(OurPlayerData))
 		{
