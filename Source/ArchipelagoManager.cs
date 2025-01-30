@@ -580,6 +580,10 @@ public class ArchipelagoManager
                     MessageLog.Add(new ArchipelagoMessage(message.ToString()));
                 }
                 break;
+            case CountdownLogMessage:
+            case GoalLogMessage:
+                MessageLog.Add(new ArchipelagoMessage(message.ToString()));
+                break;
         }
     }
 
