@@ -30,7 +30,9 @@ public class TrafficBlock(Vec3 end) : Solid
             foreach (var mat in Model.Materials)
             {
                 var newColor = mat.Color;
-                newColor.A = 0xA0;
+                newColor.R = 0x30;
+                newColor.G = 0x30;
+                newColor.B = 0x30;
                 mat.Color = newColor;
             }
         }
@@ -39,7 +41,9 @@ public class TrafficBlock(Vec3 end) : Solid
             foreach (var mat in Model.Materials)
             {
                 var newColor = mat.Color;
-                newColor.A = 0xFF;
+                newColor.R = 0xFF;
+                newColor.G = 0xFF;
+                newColor.B = 0xFF;
                 mat.Color = newColor;
             }
         }
