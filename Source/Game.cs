@@ -150,6 +150,12 @@ public class Game : App
 	{
 		Audio.Update();
 
+        // TODO
+        /**if (!Save.Instance.BackgroundInput && !App.Focused)
+		{
+			Controls.ConsumePress();
+		}**/
+
 		// toggle mouse camera mode
 		if (Input.Keyboard.Pressed(Keys.Escape))
 			mouseCameraEnabled = false;
@@ -166,8 +172,8 @@ public class Game : App
 			Input.BindingFilters.Add(mouseCameraEnabled 
 				? ControlsConfig.FILTER_MOUSE_CAMERA
 				: ControlsConfig.FILTER_KEYBOARD_CAMERA);
-		}
-
+        }	
+        
 		// update top scene
 		if (scenes.TryPeek(out var scene))
 		{

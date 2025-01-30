@@ -39,8 +39,22 @@ public class Controls(Input input, ControlsConfig config, int controllerIndex)
 		GamepadProviders.PlayStation => "PlayStation 5",
 		GamepadProviders.Nintendo => "Nintendo Switch",
 		GamepadProviders.Xbox => "Xbox Series",
-		_ => "Xbox Series",
-	};
+        _ => "Xbox Series",
+    };
+
+    // TODO
+/**    public static void ConsumePress()
+    {
+        Move.ConsumePress();
+        Menu.ConsumePress();
+        Camera.ConsumePress();
+        Jump.ConsumePress();
+        Dash.ConsumePress();
+        Climb.ConsumePress();
+        Confirm.ConsumePress();
+        Cancel.ConsumePress();
+        Pause.ConsumePress();
+    }**/
 
 	private string GetPromptLocation(string name)
 	{
