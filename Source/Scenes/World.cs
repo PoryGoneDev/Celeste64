@@ -94,6 +94,7 @@ public class World : Scene
 			Menu optionsMenu = new Menu();
 			optionsMenu.Title = Loc.Str("OptionsTitle");
 			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsFullscreen"), Save.Instance.ToggleFullscreen, () => Save.Instance.Fullscreen));
+			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsBackground"), Save.Instance.ToggleBackgroundInput, () => Save.Instance.BackgroundInput));
 			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsZGuide"), Save.Instance.ToggleZGuide, () => Save.Instance.ZGuide));
 			optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsTimer"), Save.Instance.ToggleTimer, () => Save.Instance.SpeedrunTimer));
 			optionsMenu.Add(new Menu.MultiSelect<Save.InvertCameraOptions>(Loc.Str("OptionsInvertCamera"), Save.Instance.SetCameraInverted, () => Save.Instance.InvertCamera));

@@ -145,6 +145,11 @@ public class Game : Module
 
 	public override void Update()
 	{
+		if (!Save.Instance.BackgroundInput && !App.Focused)
+		{
+			Controls.ConsumePress();
+		}
+
 		// update top scene
 		if (scenes.TryPeek(out var scene))
 		{

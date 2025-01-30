@@ -78,9 +78,22 @@ public static class Controls
 		Confirm.Consume();
 		Cancel.Consume();
 		Pause.Consume();
-	}
+    }
 
-	private static readonly Dictionary<string, Dictionary<string, string>> prompts = [];
+    public static void ConsumePress()
+    {
+        Move.ConsumePress();
+        Menu.ConsumePress();
+        Camera.ConsumePress();
+        Jump.ConsumePress();
+        Dash.ConsumePress();
+        Climb.ConsumePress();
+        Confirm.ConsumePress();
+        Cancel.ConsumePress();
+        Pause.ConsumePress();
+    }
+
+    private static readonly Dictionary<string, Dictionary<string, string>> prompts = [];
 
 	private static string GetControllerName(Gamepads pad) => pad switch
 	{

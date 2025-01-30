@@ -56,10 +56,15 @@ public class Save
 	/// </summary>
 	public bool Fullscreen { get; set; } = true;
 
-	/// <summary>
-	/// If the Vertical Z Guide should be drawn below the Player
-	/// </summary>
-	public bool ZGuide { get; set; } = true;
+    /// <summary>
+    /// If Background Input should be enabled
+    /// </summary>
+    public bool BackgroundInput { get; set; } = true;
+
+    /// <summary>
+    /// If the Vertical Z Guide should be drawn below the Player
+    /// </summary>
+    public bool ZGuide { get; set; } = true;
 
 	/// <summary>
 	/// If the Speedrun Timer should be visible while playing
@@ -136,7 +141,14 @@ public class Save
 		SyncSettings();
 	}
 
-	public void ToggleZGuide()
+	public void ToggleBackgroundInput()
+    {
+        BackgroundInput = !BackgroundInput;
+        SyncSettings();
+    }
+
+
+    public void ToggleZGuide()
 	{
 		ZGuide = !ZGuide;
 	}
@@ -166,6 +178,7 @@ public class Save
 	public void SyncSettings()
 	{
 		App.Fullscreen = Fullscreen;
+		Foster.Framework.Input.FocusRequired = !BackgroundInput;
 		Audio.SetVCAVolume("vca:/music", Calc.Clamp(MusicVolume / 10.0f, 0, 1));
 		Audio.SetVCAVolume("vca:/sfx", Calc.Clamp(SfxVolume / 10.0f, 0, 1));
 	}
