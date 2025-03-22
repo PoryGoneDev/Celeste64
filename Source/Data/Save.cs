@@ -141,11 +141,10 @@ public class Save
 		ApplySettings(app);
 	}
 
-	public void ToggleBackgroundInput()
+	public void ToggleBackgroundInput(App app)
     {
         BackgroundInput = !BackgroundInput;
-        // TODO
-        //ApplySettings(app);
+        ApplySettings(app);
     }
 
 

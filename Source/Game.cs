@@ -150,11 +150,11 @@ public class Game : App
 	{
 		Audio.Update();
 
-        // TODO
-        /**if (!Save.Instance.BackgroundInput && !App.Focused)
+        
+        if (!Save.Instance.BackgroundInput && !Game.Instance.Window.Focused)
 		{
-			Controls.ConsumePress();
-		}**/
+			Controls.Consume();
+		}
 
 		// toggle mouse camera mode
 		if (Input.Keyboard.Pressed(Keys.Escape))

@@ -30,7 +30,6 @@ public class Overworld : Scene
 			{
 				//Menu.Add(new Menu.Option(Loc.Str("Continue")));
 				Menu.Add(new Menu.Option(Loc.Str("Restart")));
-				Menu.Add(new Menu.Option("Restart"));
 				Complete = record.GetFlag("Strawberries") >= Level.Strawberries;
 			}
 			else
