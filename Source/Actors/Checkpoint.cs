@@ -95,6 +95,11 @@ public class Checkpoint : Actor, IHaveModels, IPickup, IHaveSprites
 		Save.CurrentRecord.SetFlag(Name);
 		World.AddCheckpointToHistory(Name);
 
+        if (Game.Instance.ArchipelagoManager.Checkpointsanity == null)
+        {
+            Save.CurrentRecord.SetFlag("Item_" + Name);
+        }
+
 		if (World.Entry.Submap)
 		{
 			World.Entry = World.Entry with { CheckPoint = Name };

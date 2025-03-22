@@ -71,7 +71,7 @@ public class ArchipelagoManager
     public bool Friendsanity { get; set; }
     public bool Signsanity { get; set; }
     public bool Carsanity { get; set; }
-    public bool Checkpointsanity { get; set; }
+    public bool? Checkpointsanity { get; set; }
     public bool MoveShuffle { get; set; }
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
@@ -356,17 +356,19 @@ public class ArchipelagoManager
         }
 
         // Load randomizer data.
-        StrawberriesRequired = Convert.ToInt32(((LoginSuccessful)result).SlotData["strawberries_required"]);
-        Friendsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["friendsanity"]);
-        Signsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["signsanity"]);
-        Carsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["carsanity"]);
-        Checkpointsanity = Convert.ToBoolean(((LoginSuccessful)result).SlotData["checkpointsanity"]);
-        MoveShuffle = Convert.ToBoolean(((LoginSuccessful)result).SlotData["move_shuffle"]);
-        BadelineSource = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_source"]);
-        BadelineFrequency = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_frequency"]);
-        BadelineSpeed = Convert.ToInt32(((LoginSuccessful)result).SlotData["badeline_chaser_speed"]);
-        DeathLinkAmnesty = Convert.ToInt32(((LoginSuccessful)result).SlotData["death_link_amnesty"]);
-        bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData["death_link"]);
+        object? value;
+        StrawberriesRequired  = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("strawberries_required", out value)        ? value : 15);
+        Friendsanity          = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("friendsanity", out value)               ? value : false);
+        Signsanity            = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("signsanity", out value)                 ? value : false);
+        Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
+        MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
+        BadelineSource        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_source", out value)       ? value : 0);
+        BadelineFrequency     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_frequency", out value)    ? value : 0);
+        BadelineSpeed         = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_speed", out value)        ? value : 0);
+        DeathLinkAmnesty      = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("death_link_amnesty", out value)           ? value : 10);
+        bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("death_link", out value)                 ? value : false);
+
+        Checkpointsanity = ((LoginSuccessful)result).SlotData.TryGetValue("checkpointsanity", out value) ? Convert.ToBoolean(value) : null;
 
         // Initialize DeathLink service.
         _deathLinkService = _session.CreateDeathLinkService();
