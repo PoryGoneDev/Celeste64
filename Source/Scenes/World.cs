@@ -99,7 +99,7 @@ public class World : Scene
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, (i) => Save.Instance.SetMusicVolume(Game, i)));
 			optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, (i) => Save.Instance.SetSfxVolume(Game, i)));
 
-            Menu checkpointsMenu = new Menu();
+            Menu checkpointsMenu = new Menu(Controls);
             checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
 			foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
             {
