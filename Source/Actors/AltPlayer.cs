@@ -45,7 +45,7 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
 			Calc.Approach(ref ModelScale.Y, 1, Time.Delta / .8f);
 			Calc.Approach(ref ModelScale.Z, 1, Time.Delta / .8f);
 
-			Model.Update();
+			Model.Update(Time);
 			Model.Transform = Matrix.CreateScale(ModelScale * 3);
 		}
 
@@ -65,7 +65,7 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
 			Hair.Forward = -new Vec3(Facing, 0);
 			Hair.Squish = ModelScale;
 			Hair.Materials[0].Effects = 0;
-			Hair.Update(hairMatrix);
+			Hair.Update(Time, hairMatrix);
 		}
 	}
 
