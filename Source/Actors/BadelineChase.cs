@@ -61,7 +61,7 @@ public class BadelineChase : Actor, IHaveModels, IPickup, ICastPointShadow
 			hair.Flags = Model.Flags;
 			hair.Forward = -new Vec3(Facing, 0);
 			hair.Materials[0].Effects = 0;
-			hair.Update(hairMatrix);
+			hair.Update(Time, hairMatrix);
 		}
 
     }
