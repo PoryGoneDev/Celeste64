@@ -36,27 +36,13 @@ public class Controls(Input input, ControlsConfig config, int controllerIndex)
 
 	private string GetControllerName(GamepadProviders pad) => pad switch
 	{
-		GamepadProviders.PlayStation => "PlayStation 5",
+		GamepadProviders.PlayStation => "PlayStation",
 		GamepadProviders.Nintendo => "Nintendo Switch",
 		GamepadProviders.Xbox => "Xbox Series",
         _ => "Xbox Series",
     };
 
-    // TODO
-/**    public static void ConsumePress()
-    {
-        Move.ConsumePress();
-        Menu.ConsumePress();
-        Camera.ConsumePress();
-        Jump.ConsumePress();
-        Dash.ConsumePress();
-        Climb.ConsumePress();
-        Confirm.ConsumePress();
-        Cancel.ConsumePress();
-        Pause.ConsumePress();
-    }**/
-
-	private string GetPromptLocation(string name)
+    private string GetPromptLocation(string name)
 	{
 		var gamepad = Input.Controllers[ControllerIndex];
 		var deviceTypeName = 
