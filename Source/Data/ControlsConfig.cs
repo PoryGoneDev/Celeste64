@@ -56,18 +56,22 @@ public class ControlsConfig
 
 	public ActionBinding MenuLeft { get; private set; } = new ActionBinding()
 		.Add(Keys.Left, Keys.A)
+        .Add(Buttons.Left)
 		.AddLeftJoystickLeft();
 
 	public ActionBinding MenuRight { get; private set; } = new ActionBinding()
 		.Add(Keys.Right, Keys.D)
+        .Add(Buttons.Right)
 		.AddLeftJoystickRight();
 
 	public ActionBinding MenuUp { get; private set; } = new ActionBinding()
 		.Add(Keys.Up, Keys.W)
+        .Add(Buttons.Up)
 		.AddLeftJoystickUp();
 
 	public ActionBinding MenuDown { get; private set; } = new ActionBinding()
 		.Add(Keys.Down, Keys.S)
+        .Add(Buttons.Down)
 		.AddLeftJoystickDown();
 }
 
