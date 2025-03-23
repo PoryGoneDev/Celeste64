@@ -32,12 +32,12 @@ This is the source code and general information for *Celeste 64: Fragments of th
 You can find prebuilt version of the game on [itch.io](https://maddymakesgamesinc.itch.io/celeste64).
 
 ### Installation
- - You need [.NET 8.0](https://dotnet.microsoft.com/en-us/download/dotnet/8.0)
+ - You need [.NET 9.0](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
  - Clone this repo, make sure NuGet packages are found with `dotnet restore`
  - Run `Celeste64.csproj` with `dotnet run` or `dotnet build`
 
 ### Libraries Used
- - [Foster](https://github.com/FosterFramework/Foster) + [SDL2](https://github.com/libsdl-org/sdl): Input/Windowing/Rendering
+ - [Foster](https://github.com/FosterFramework/Foster) + [SDL3](https://github.com/libsdl-org/sdl): Input/Windowing/Rendering
  - [SledgeFormats](https://github.com/LogicAndTrick/sledge-formats): Parsing TrenchBroom level formats
  - [SharpGLTF](https://github.com/vpenades/SharpGLTF): Parsing and Animating glTF2 models
  - [FMOD](https://www.fmod.com): For Music and Sound Effects
