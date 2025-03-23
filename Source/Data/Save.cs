@@ -147,7 +147,6 @@ public class Save
         ApplySettings(app);
     }
 
-
     public void ToggleZGuide()
 	{
 		ZGuide = !ZGuide;
