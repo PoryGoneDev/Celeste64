@@ -74,7 +74,6 @@ public class Game : App
 
     public ArchipelagoManager ArchipelagoManager { get; set; }
 
-
     public Game(AppConfig config) : base(config)
 	{
 		target = new(GraphicsDevice, Width, Height, [TextureFormat.Color, TextureFormat.Depth16]);

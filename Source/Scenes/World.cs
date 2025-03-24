@@ -922,6 +922,8 @@ public class World : Scene
 						Matrix3x2.CreateScale(wiggle) * 
 						Matrix3x2.CreateTranslation(at + new Vec2(-60 * (1 - Ease.Cube.Out(strawbCounterEase)), UI.IconSize / 2)));
 					UI.Strawberries(batch, Save.CurrentRecord.GetFlag("Strawberries"), Game.Instance.ArchipelagoManager.StrawberriesRequired, Vec2.Zero);
+
+
 					batch.PopMatrix();
 				}
 
@@ -954,6 +956,8 @@ public class World : Scene
 			// overlay
 			{
 				var scroll = -new Vec2(1.25f, 0.9f) * (float)(Time.Elapsed.TotalSeconds) * 0.05f;
+
+				Game.Instance.ArchipelagoManager.HandleMessageQueue(batch, font, bounds);
 
 				Game.Instance.ArchipelagoManager.HandleMessageQueue(batch, font, bounds);
 
