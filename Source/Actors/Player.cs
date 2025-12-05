@@ -66,6 +66,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private const float FeatherExitXYMult = .5f;
 	private const float FeatherExitZSpeed = 60;
 
+	static public int CHairLength = 10;
 	static public Color CNormal = 0xdb2c00;
 	static public Color CNoDash = 0x6ec0ff;
 	static public Color CTwoDashes = 0xfa91ff;
@@ -675,7 +676,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		}
 
 		Hair.Color = color;
-		Hair.Nodes = (InFeatherState ? 18 : (dashes >= 2 ? 16 : 10));
+		Hair.Nodes = (InFeatherState ? (int)(1.8f * CHairLength) : (dashes >= 2 ? (int)(1.6f * CHairLength) : CHairLength));
 	}
 
 	public void SweepTestMove(Vec3 delta, bool resolveImpact)

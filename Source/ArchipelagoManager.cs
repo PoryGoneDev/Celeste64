@@ -363,6 +363,7 @@ public class ArchipelagoManager
         Signsanity            = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("signsanity", out value)                 ? value : false);
         Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
         MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
+        Player.CHairLength    = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_hair_length", out value)         ? value : 10);
         Player.CNormal        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_one_dash_hair_color", out value) ? value : 0xdb2c00);
         Player.CTwoDashes     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_two_dash_hair_color", out value) ? value : 0xfa91ff);
         Player.CNoDash        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_no_dash_hair_color", out value)  ? value : 0x6ec0ff);
@@ -783,6 +784,7 @@ public class ArchipelagoManager
         public string Sublevel;
         public Vector2 Facing;
         public Vector3 Position;
+        public int HairLength;
         public string HairColor;
         public string Timestamp;
 
@@ -792,6 +794,7 @@ public class ArchipelagoManager
                 this.Sublevel == otherData.Sublevel &&
                 (Vector2.Distance(this.Facing, otherData.Facing) < 0.1f) &&
                 (Vector3.Distance(this.Position, otherData.Position) < 0.1f) &&
+                this.HairLength == otherData.HairLength &&
                 this.HairColor == otherData.HairColor)
             {
                 return true;

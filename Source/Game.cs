@@ -46,7 +46,7 @@ public class Game : Module
 	public const int Height = 360;
 	public static readonly Version Version = typeof(Game).Assembly.GetName().Version!;
 	public static readonly string VersionString = $"v.{Version.Major}.{Version.Minor}.{Version.Build}";
-	public static readonly string AP_VersionString = $"AP v.1.3.0";
+	public static readonly string AP_VersionString = $"AP v.1.4.0";
 
 	/// <summary>
 	/// Used by various rendering elements to proportionally scale if you change the default game resolution

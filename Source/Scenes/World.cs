@@ -1130,6 +1130,7 @@ public class World : Scene
 					altPlayer.Name = otherPlayer.Name;
 					altPlayer.Position = otherPlayer.Position;
 					altPlayer.Facing = otherPlayer.Facing;
+					altPlayer.Hair.Nodes = otherPlayer.HairLength;
 					altPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
 					altPlayer.TimestampLastMoved = DateTime.Parse(otherPlayer.Timestamp);
 				}
@@ -1146,8 +1147,9 @@ public class World : Scene
 					newPlayer.Name = otherPlayer.Name;
 					newPlayer.Position = otherPlayer.Position;
 					newPlayer.Facing = otherPlayer.Facing;
+					newPlayer.Hair.Nodes = otherPlayer.HairLength;
 					newPlayer.SetHairColor(Color.FromHexStringRGB(otherPlayer.HairColor));
-                    newPlayer.TimestampLastMoved = otherPlayerTimestamp;
+					newPlayer.TimestampLastMoved = otherPlayerTimestamp;
 
                     this.Add<AltPlayer>(newPlayer);
 					Game.Instance.ArchipelagoManager.OtherPlayers[otherPlayer.Name] = newPlayer;

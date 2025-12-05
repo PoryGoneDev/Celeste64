@@ -97,6 +97,5 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
         }
 
         Hair.Color = color;
-        Hair.Nodes = 10;
     }
 }
