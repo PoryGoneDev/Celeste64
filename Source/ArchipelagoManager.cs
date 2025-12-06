@@ -75,6 +75,7 @@ public class ArchipelagoManager
     public bool Carsanity { get; set; }
     public bool? Checkpointsanity { get; set; }
     public bool MoveShuffle { get; set; }
+    public Dictionary<int, int> CassetteMap { get; set; } = new();
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
     public int BadelineSpeed { get; set; }
@@ -362,15 +363,37 @@ public class ArchipelagoManager
         Friendsanity          = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("friendsanity", out value)               ? value : false);
         Signsanity            = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("signsanity", out value)                 ? value : false);
         Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
+
         MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
+        CassetteMap           = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["cassette_map"].ToString());
+
+        if (CassetteMap is null)
+        {
+            CassetteMap = new Dictionary<int, int>()
+            {
+                { 0, 0 },
+                { 1, 1 },
+                { 2, 2 },
+                { 3, 3 },
+                { 4, 4 },
+                { 5, 5 },
+                { 6, 6 },
+                { 7, 7 },
+                { 8, 8 },
+                { 9, 9 },
+            };
+        }
+
         Player.CHairLength    = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_hair_length", out value)         ? value : 10);
         Player.CNormal        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_one_dash_hair_color", out value) ? value : 0xdb2c00);
         Player.CTwoDashes     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_two_dash_hair_color", out value) ? value : 0xfa91ff);
         Player.CNoDash        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_no_dash_hair_color", out value)  ? value : 0x6ec0ff);
         Player.CFeather       = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_feather_hair_color", out value)  ? value : 0xf2d450);
+
         BadelineSource        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_source", out value)       ? value : 0);
         BadelineFrequency     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_frequency", out value)    ? value : 0);
         BadelineSpeed         = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_speed", out value)        ? value : 0);
+
         DeathLinkAmnesty      = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("death_link_amnesty", out value)           ? value : 10);
         bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("death_link", out value)                 ? value : false);
 
