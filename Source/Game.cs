@@ -72,6 +72,7 @@ public class Game : Module
 
 
     public ArchipelagoManager ArchipelagoManager { get; set; }
+    public TrapManager TrapManager { get; set; }
 
 
     public Game()
@@ -103,6 +104,8 @@ public class Game : Module
             Password = AP_Conn?.Password,
             SeeGhosts = AP_Conn?.SeeGhosts == true,
         });
+
+        TrapManager = new TrapManager();
 
         var result = ArchipelagoManager.TryConnect().Result;
 		if (result == null)
@@ -332,6 +335,8 @@ public class Game : Module
             ArchipelagoManager.CheckReceivedItemQueue();
             ArchipelagoManager.CheckLocationsToSend();
             ArchipelagoManager.HandleCollectedLocations();
+
+			TrapManager.Update();
         }
 	}
 
@@ -370,5 +375,21 @@ public class Game : Module
 		if (transitionStep == TransitionStep.None)
 			audioBeatCounterEvent = true;
 		return FMOD.RESULT.OK;
+	}
+
+	public World? GetWorld()
+	{
+		// update top scene
+		if (scenes.TryPeek(out var scene))
+		{
+			if (scene is Celeste64.World)
+			{
+				return scene as Celeste64.World;
+			}
+
+			return null;
+		}
+
+		return null;
 	}
 }

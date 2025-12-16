@@ -1,4 +1,6 @@
 
+using static Celeste64.Menu;
+
 namespace Celeste64;
 
 /// <summary>
@@ -73,11 +75,22 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	static private readonly Color CRefillFlash = Color.White;
 	static public Color CFeather = 0xf2d450;
 
-	#endregion
+    #endregion
 
-	#region SubClasses
+    #region
+	static public bool BaldActive = false;
+	static public bool HiccupActive = false;
+	static public bool IceActive = false;
+	static public bool InvisibleActive = false;
+	static public bool ReverseActive = false;
+	static public bool StunActive = false;
+	static public bool ZoomInActive = false;
+	static public bool ZoomOutActive = false;
+    #endregion
 
-	private class Trail
+    #region SubClasses
+
+    private class Trail
 	{
 		public readonly Hair Hair;
 		public readonly SkinnedModel Model;
@@ -112,7 +125,10 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	private static Vec3 storedCameraForward;
 	private static float storedCameraDistance;
 
-	public enum States { Normal, Dashing, Skidding, Climbing, StrawbGet, FeatherStart, Feather, Respawn, Dead, StrawbReveal, Cutscene, Bubble, Cassette };
+	private static Vec3 lastSpawnPos;
+
+
+    public enum States { Normal, Dashing, Skidding, Climbing, StrawbGet, FeatherStart, Feather, Respawn, Dead, StrawbReveal, Cutscene, Bubble, Cassette };
 	private enum Events { Land };
 
 	public bool Dead = false;
@@ -252,6 +268,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		{
 			stateMachine.State = States.Normal;
 		}
+
+		lastSpawnPos = Position;
 
 		sfxWallSlide = World.Add(new Sound(this, Sfx.sfx_wall_slide));
 		sfxFeather = World.Add(new Sound(this, Sfx.sfx_feather_state_active_loop));
@@ -497,7 +515,16 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
             World.Camera.Position += (cameraPos - World.Camera.Position) * (1 - MathF.Pow(0.01f, Time.Delta));
             World.Camera.LookAt = lookAt;
 
-			float targetFOV = Calc.ClampedMap(velocity.XY().Length(), MaxSpeed * 1.2f, 120, 1, 1.2f);
+			float FOV_MULT = 1.0f;
+			if (Player.ZoomInActive)
+			{
+				FOV_MULT = 0.2f;
+			}
+			else if (Player.ZoomOutActive)
+			{
+				FOV_MULT = 2.0f;
+			}
+			float targetFOV = Calc.ClampedMap(velocity.XY().Length(), MaxSpeed * 1.2f, 120, 1.0f * FOV_MULT, 1.2f * FOV_MULT);
 
 			World.Camera.FOVMultiplier = Calc.Approach(World.Camera.FOVMultiplier, targetFOV, Time.Delta / 4);
 		}
@@ -510,6 +537,20 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 			Facing = Calc.AngleToVector(Calc.AngleApproach(Facing.Angle(), targetFacing.Angle(), MathF.Tau * 2 * Time.Delta));
 
+			if (Player.InvisibleActive)
+			{
+				for (int i = 0; i < Model.Materials.Count; i++)
+				{
+					Model.Flags |= ModelFlags.Transparent;
+					Model.Materials[i].Color = Color.Transparent;
+				}
+				for (int j = 0; j < Hair.Materials.Count; j++)
+				{
+					Hair.Flags |= ModelFlags.Transparent;
+					Hair.Materials[j].Color = Color.Transparent;
+					Hair.Color = Color.Transparent;
+				}
+			}
 			Model.Update();
 			Model.Transform = Matrix.CreateScale(ModelScale * 3);
 
@@ -574,7 +615,16 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		{
 			if (trails[i].Percent < 1)
 				trails[i].Percent += Time.Delta / 0.5f;
-		}
+
+			if (Player.InvisibleActive)
+			{
+				for (int j = 0; j < trails[i].Model.Materials.Count; j++)
+				{
+					trails[i].Model.Flags |= ModelFlags.Transparent;
+					trails[i].Model.Materials[j].Color = Color.Transparent;
+				}
+			}
+        }
 	}
 
 	#endregion
@@ -654,6 +704,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			if (Vec2.Dot(input, Vec2.UnitY) >= .985f)
 				input = Vec2.UnitY;
 
+			if (Player.ReverseActive)
+			{
+				input.X = -input.X;
+				input.Y = -input.Y;
+			}
+
 			return forward * input.Y + side * input.X;
 		}
 	}
@@ -664,8 +720,21 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 	}
 
 	public void SetHairColor(Color color)
-	{
-		foreach (var mat in Model.Materials)
+    {
+        int finalHairLength = CHairLength;
+
+        if (Player.BaldActive)
+        {
+            finalHairLength = 1;
+            color = new Color(0xEBB894);
+        }
+
+        if (Player.InvisibleActive)
+        {
+            color.A = 0;
+        }
+
+        foreach (var mat in Model.Materials)
 		{
 			if (mat.Name == "Hair")
 			{
@@ -675,8 +744,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
             mat.SilhouetteColor = color;
 		}
 
-		Hair.Color = color;
-		Hair.Nodes = (InFeatherState ? (int)(1.8f * CHairLength) : (dashes >= 2 ? (int)(1.6f * CHairLength) : CHairLength));
+        Hair.Color = color;
+		Hair.Nodes = (InFeatherState ? (int)(1.8f * finalHairLength) : (dashes >= 2 ? (int)(1.6f * finalHairLength) : finalHairLength));
 	}
 
 	public void SweepTestMove(Vec3 delta, bool resolveImpact)
@@ -880,8 +949,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		storedCameraDistance = cameraTargetDistance;
 		Save.CurrentRecord.Deaths++;
 		Dead = true;
+        TrapManager.Instance.AddDeathToActiveTraps();
 
-		if (sendDeath)
+        if (sendDeath)
 		{
 			Game.Instance.ArchipelagoManager.SendDeathLinkIfEnabled("couldn't climb the mountain");
         }
@@ -898,6 +968,11 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryClimb()
 	{
+		if (Player.StunActive)
+		{
+			return false;
+		}
+
 		if (Game.Instance.ArchipelagoManager.MoveShuffle)
 		{
 			if (Save.CurrentRecord.GetFlag("Climb") == 0)
@@ -941,9 +1016,10 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool WallJumpCheck()
 	{
-		if (Controls.Jump.Pressed 
+		if ((Controls.Jump.Pressed || Player.HiccupActive)
 		&& World.SolidWallCheckClosestToNormal(SolidWaistTestPos, ClimbCheckDist, -new Vec3(targetFacing, 0), out var hit))
 		{
+			Player.HiccupActive = false;
 			Controls.Jump.ConsumePress();
 			Position += (hit.Pushout * (WallPushoutDist / ClimbCheckDist));
 			targetFacing = hit.Normal.XY().Normalized();
@@ -995,6 +1071,27 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 		dashes = Math.Max(dashes, 1);
 		CancelGroundSnap();
+	}
+
+	public bool IsTrappable()
+	{
+		if (stateMachine.State != States.StrawbGet &&
+            stateMachine.State != States.Bubble &&
+            stateMachine.State != States.Cutscene &&
+            stateMachine.State != States.StrawbReveal &&
+            stateMachine.State != States.Dead &&
+            stateMachine.State != States.Cassette &&
+            stateMachine.State != States.Respawn)
+		{
+			return true;
+		}
+
+		return false;
+	}
+
+	public void BubbleTrap()
+	{
+		BubbleTo(lastSpawnPos);
 	}
 
 	#endregion
@@ -1059,6 +1156,10 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 				float fric = Friction;
 				if (!onGround)
 					fric *= AirFrictionMult;
+				else if (Player.IceActive)
+				{
+					fric = 8.0f;
+				}
 
 				// friction
 				Calc.Approach(ref velXY, Vec2.Zero, fric * Time.Delta);
@@ -1178,6 +1279,11 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			}
 
 			velocity = velocity.WithXY(velXY);
+
+			if (Player.StunActive)
+			{
+				velocity = Vec3.Zero;
+			}
 		}
 
 		// Footstep sounds
@@ -1212,8 +1318,15 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			return;
 
 		// jump & gravity
-		if (tCoyote > 0 && Controls.Jump.ConsumePress())
+		if (Player.StunActive)
+		{
+			return;
+		}
+		else if (tCoyote > 0 && (Controls.Jump.ConsumePress() || Player.HiccupActive))
+		{
+			Player.HiccupActive = false;
 			Jump();
+		}
 		else if (WallJumpCheck())
 			WallJump();
 		else
@@ -1287,6 +1400,11 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 	private bool TryDash()
 	{
+		if (Player.StunActive)
+		{
+			return false;
+		}
+
 		if (Game.Instance.ArchipelagoManager.MoveShuffle)
 		{
 			if (onGround && Save.CurrentRecord.GetFlag("Grounded Dash") == 0)
@@ -1370,8 +1488,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			tNoDashJump -= Time.Delta;
 
 		// dash jump
-		if (dashedOnGround && tCoyote > 0 && tNoDashJump <= 0 && Controls.Jump.ConsumePress())
+		if (dashedOnGround && tCoyote > 0 && tNoDashJump <= 0 && (Controls.Jump.ConsumePress() || Player.HiccupActive))
 		{
+			Player.HiccupActive = false;
 			stateMachine.State = States.Normal;
 			DashJump();
 			return;
@@ -1466,8 +1585,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			var velXY = velocity.XY();
 
 			// skid jump
-			if (tNoSkidJump <= 0 && Controls.Jump.ConsumePress())
+			if (tNoSkidJump <= 0 && (Controls.Jump.ConsumePress() || Player.HiccupActive))
 			{
+				Player.HiccupActive = false;
 				stateMachine.State = States.Normal;
 				SkidJump();
 				return;
@@ -1534,8 +1654,9 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 			return;
 		}
 
-		if (Controls.Jump.ConsumePress())
+		if (Controls.Jump.ConsumePress() || Player.HiccupActive)
 		{
+			Player.HiccupActive = false;
 			stateMachine.State = States.Normal;
 			targetFacing = -targetFacing;
 			WallJump();
@@ -1567,6 +1688,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 
 		Vec2 inputTranslated = Controls.Move.Value;
 		inputTranslated.X *= climbInputSign;
+
+		if (Player.ReverseActive)
+		{
+			inputTranslated.X = -inputTranslated.X;
+			inputTranslated.Y = -inputTranslated.Y;
+		}
 
 		// move around
 		if (climbCornerEase <= 0)
@@ -2231,6 +2358,8 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
 		drawModel = drawHair = true;
 		cameraOverride = null;
 		PointShadowAlpha = 1;
+
+		lastSpawnPos = Position;
 	}
 
 	#endregion
