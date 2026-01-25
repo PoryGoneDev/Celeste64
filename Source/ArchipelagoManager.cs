@@ -31,7 +31,6 @@ public record ArchipelagoConnectionInfo
     public string Url { get; init; } = "wss://archipelago.gg:38281";
     public string SlotName { get; init; } = "Madeline";
     public string Password { get; init; } = "";
-    public bool SeeGhosts { get; init; } = false;
 }
 public struct ArchipelagoMessage
 {
@@ -46,7 +45,7 @@ public struct ArchipelagoMessage
 
 public class ArchipelagoManager
 {
-    private static readonly Version _supportedArchipelagoVersion = new(7, 7, 7);
+    private static readonly Version _supportedArchipelagoVersion = new(0, 6, 6);
 
     private readonly ArchipelagoConnectionInfo _connectionInfo;
     private ArchipelagoSession? _session;
@@ -492,7 +491,7 @@ public class ArchipelagoManager
         DeathsCounted = 0;
 
         // Log our current time so we can make sure we ignore our own DeathLink.
-        _lastDeath = DateTime.Now;
+        _lastDeath = DateTime.UtcNow;
         cause = $"{_session.Players.GetPlayerAlias(Slot)} {cause}.";
 
         try
@@ -517,7 +516,7 @@ public class ArchipelagoManager
 
         try
         {
-            _session.Locations.CompleteLocationChecks(locations);
+            _session.Locations.CompleteLocationChecksAsync(locations);
         }
         catch (ArchipelagoSocketClosedException)
         {
@@ -918,7 +917,6 @@ public class ArchipelagoManager
 
     private bool listCallbackSet = false;
     public bool addedOurNameToList = false;
-    public bool GhostPlayersActive => _connectionInfo.SeeGhosts;
 
     public struct OtherPlayerData
     {
@@ -999,7 +997,7 @@ public class ArchipelagoManager
         }
         else if (packet.PacketType == ArchipelagoPacketType.Retrieved)
         {
-            if (_connectionInfo.SeeGhosts)
+            if (Save.Instance.GhostPlayersActive)
             {
                 RetrievedPacket retPacket = packet as RetrievedPacket;
 

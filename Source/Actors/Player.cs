@@ -132,6 +132,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
     private enum Events { Land };
 
     public bool Dead = false;
+    public int InvincibilityFrames = 0;
 
     public Vec3 ModelScale = Vec3.One;
     public SkinnedModel Model;
@@ -356,6 +357,12 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
                 tGroundSnapCooldown -= Time.Delta;
             if (tClimbCooldown > 0)
                 tClimbCooldown -= Time.Delta;
+        }
+
+        InvincibilityFrames -= 1;
+        if (InvincibilityFrames < 0)
+        {
+            InvincibilityFrames = 0;
         }
 
         previousVelocity = velocity;
@@ -2116,6 +2123,7 @@ public class Player : Actor, IHaveModels, IHaveSprites, IRidePlatforms, ICastPoi
         PointShadowAlpha = 1;
         drawModel = drawHair = true;
         drawOrbs = false;
+        InvincibilityFrames = 180;
     }
 
     #endregion

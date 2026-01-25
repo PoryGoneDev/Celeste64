@@ -243,7 +243,7 @@ namespace Celeste64
         public static Dictionary<string, TrapType> TrapLinkNames = new Dictionary<string, TrapType>()
         {
             { "Bald Trap",          TrapType.Bald },
-            { "Bubble Trap",        TrapType.Bald },
+            { "Bubble Trap",        TrapType.Bubble },
             { "Hiccup Trap",        TrapType.Hiccup },
             { "Ice Trap",           TrapType.Ice },
             { "Invisible Trap",     TrapType.Invisible },

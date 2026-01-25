@@ -101,6 +101,9 @@ public class World : Scene
             optionsMenu.Add(new Menu.Spacer());
             optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsBGM"), 0, 10, () => Save.Instance.MusicVolume, Save.Instance.SetMusicVolume));
             optionsMenu.Add(new Menu.Slider(Loc.Str("OptionsSFX"), 0, 10, () => Save.Instance.SfxVolume, Save.Instance.SetSfxVolume));
+            optionsMenu.Add(new Menu.Spacer());
+            optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsShowGhosts"), Save.Instance.ShowGhosts, () => Save.Instance.GhostPlayersActive));
+            optionsMenu.Add(new Menu.Toggle(Loc.Str("OptionsDieToGhosts"), Save.Instance.DieToGhosts, () => Save.Instance.DieToGhostPlayers));
 
             checkpointsMenu.Title = Loc.Str("CheckpointsTitle");
             foreach(KeyValuePair<string, string> checkpoint in ArchipelagoManager.CheckpointAPToInternal)
@@ -354,7 +357,7 @@ public class World : Scene
 
         UpdateCheckpoints();
 
-        if (Game.Instance.ArchipelagoManager.GhostPlayersActive)
+        if (Save.Instance.GhostPlayersActive)
         {
             HandleOtherPlayers();
             SetMultiplayerData();
@@ -1205,6 +1208,7 @@ public class World : Scene
         OurPlayerData.Facing = Get<Player>().Facing;
         OurPlayerData.Sublevel = Entry.Map;
         OurPlayerData.HairColor = Get<Player>().Hair.Color.ToHexStringRGB();
+        OurPlayerData.HairLength = Get<Player>().Hair.Nodes;
         OurPlayerData.Timestamp = DateTime.UtcNow.ToString();
 
         if (!Game.Instance.ArchipelagoManager.ourLastSetData.RoughlyEqual(OurPlayerData))

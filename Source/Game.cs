@@ -102,7 +102,6 @@ public class Game : Module
             Url = AP_Conn?.Url,
             SlotName = AP_Conn?.SlotName,
             Password = AP_Conn?.Password,
-            SeeGhosts = AP_Conn?.SeeGhosts == true,
         });
 
         TrapManager = new TrapManager();

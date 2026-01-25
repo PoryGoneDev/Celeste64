@@ -56,6 +56,11 @@ public class Hair : Model
 		OffsetPerNode = Forward * ForwardOffsetPerNode + new Vec3(0, 0, -1 * (1 - Roundness));
 		Origin = new Vec3(0, 1.0f, -.4f);
 
+		if (Nodes <= 0)
+		{
+			Nodes = 10;
+		}
+
 		while (nodes.Count > Nodes)
 			nodes.RemoveAt(nodes.Count - 1);
 		while (nodes.Count < Nodes)
