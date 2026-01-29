@@ -26,6 +26,8 @@
 		"OptionsBGM": "BGM",
 		"OptionsSFX": "SFX",
 		"OptionsInvertCamera": "Inverted Camera",
+		"OptionsShowGhosts": "Show Player Ghosts",
+		"OptionsDieToGhosts": "Die to Player Ghosts",
 		"CheckpointsTitle":  "Checkpoint Warp"
 	},
 	"Dialog":

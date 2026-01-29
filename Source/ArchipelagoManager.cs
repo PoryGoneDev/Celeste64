@@ -16,6 +16,8 @@ using Archipelago.MultiClient.Net.MessageLog.Messages;
 using Newtonsoft.Json.Linq;
 using System.Threading;
 using Newtonsoft.Json;
+using Archipelago.MultiClient.Net.Converters;
+using static Celeste64.Menu;
 
 namespace Celeste64;
 
@@ -29,7 +31,6 @@ public record ArchipelagoConnectionInfo
     public string Url { get; init; } = "wss://archipelago.gg:38281";
     public string SlotName { get; init; } = "Madeline";
     public string Password { get; init; } = "";
-    public bool SeeGhosts { get; init; } = false;
 }
 public struct ArchipelagoMessage
 {
@@ -44,7 +45,7 @@ public struct ArchipelagoMessage
 
 public class ArchipelagoManager
 {
-    private static readonly Version _supportedArchipelagoVersion = new(7, 7, 7);
+    private static readonly Version _supportedArchipelagoVersion = new(0, 6, 6);
 
     private readonly ArchipelagoConnectionInfo _connectionInfo;
     private ArchipelagoSession? _session;
@@ -61,6 +62,7 @@ public class ArchipelagoManager
     public Dictionary<long, ItemInfo> LocationDictionary { get; private set; } = new();
     public HashSet<long> SentLocations { get; set; } = [];
     public List<ArchipelagoMessage> MessageLog { get; set; } = new();
+    public List<ArchipelagoMessage> LiteratureLog { get; set; } = new();
 
     public int Slot => _session.ConnectionInfo.Slot;
     public bool DeathLink => _session.ConnectionInfo.Tags.Contains("DeathLink");
@@ -75,6 +77,7 @@ public class ArchipelagoManager
     public bool Carsanity { get; set; }
     public bool? Checkpointsanity { get; set; }
     public bool MoveShuffle { get; set; }
+    public Dictionary<int, int> CassetteMap { get; set; } = new();
     public int BadelineSource { get; set; }
     public int BadelineFrequency { get; set; }
     public int BadelineSpeed { get; set; }
@@ -82,6 +85,10 @@ public class ArchipelagoManager
     public int BadelinesDisableTimer = 0;
     public int DeathLinkAmnesty { get; set; }
     public int DeathsCounted = 0;
+    public bool TrapLinkActive { get; set; }
+
+    public int ServerItemsRcv = -1;
+    private bool ItemRcvCallbackSet = false;
 
 
     public static Dictionary<string, int> LocationStringToID { get; set; } = new Dictionary<string, int>
@@ -240,6 +247,17 @@ public class ArchipelagoManager
         { 0xCA0027, "Double Dash House Checkpoint" },
         { 0xCA0028, "Badeline Tower Checkpoint" },
         { 0xCA0029, "Badeline Island Checkpoint" },
+
+        { 0xCA0030, "Bald Trap" },
+        { 0xCA0031, "Bubble Trap" },
+        { 0xCA0032, "Hiccup Trap" },
+        { 0xCA0033, "Ice Trap" },
+        { 0xCA0034, "Invisible Trap" },
+        { 0xCA0035, "Literature Trap" },
+        { 0xCA0036, "Reverse Trap" },
+        { 0xCA0037, "Stun Trap" },
+        { 0xCA0038, "Zoom In Trap" },
+        { 0xCA0039, "Zoom Out Trap" },
     };
 
     public static Dictionary<string, string> CheckpointAPToInternal { get; set; } = new Dictionary<string, string>
@@ -362,16 +380,43 @@ public class ArchipelagoManager
         Friendsanity          = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("friendsanity", out value)               ? value : false);
         Signsanity            = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("signsanity", out value)                 ? value : false);
         Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
+
         MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
+        CassetteMap           = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["cassette_map"].ToString());
+
+        if (CassetteMap is null)
+        {
+            CassetteMap = new Dictionary<int, int>()
+            {
+                { 0, 0 },
+                { 1, 1 },
+                { 2, 2 },
+                { 3, 3 },
+                { 4, 4 },
+                { 5, 5 },
+                { 6, 6 },
+                { 7, 7 },
+                { 8, 8 },
+                { 9, 9 },
+            };
+        }
+
+        Player.CHairLength    = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_hair_length", out value)         ? value : 10);
         Player.CNormal        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_one_dash_hair_color", out value) ? value : 0xdb2c00);
         Player.CTwoDashes     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_two_dash_hair_color", out value) ? value : 0xfa91ff);
         Player.CNoDash        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_no_dash_hair_color", out value)  ? value : 0x6ec0ff);
         Player.CFeather       = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("madeline_feather_hair_color", out value)  ? value : 0xf2d450);
+
         BadelineSource        = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_source", out value)       ? value : 0);
         BadelineFrequency     = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_frequency", out value)    ? value : 0);
         BadelineSpeed         = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("badeline_chaser_speed", out value)        ? value : 0);
+
         DeathLinkAmnesty      = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("death_link_amnesty", out value)           ? value : 10);
         bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("death_link", out value)                 ? value : false);
+
+        TrapManager.ExpirationAmount = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("trap_expiration_amount", out value) ? value : 5);
+        TrapLinkActive               = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("trap_link", out value) ? value : false);
+        TrapManager.EnabledTraps     = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["active_traps"].ToString());
 
         Checkpointsanity = ((LoginSuccessful)result).SlotData.TryGetValue("checkpointsanity", out value) ? Convert.ToBoolean(value) : null;
 
@@ -382,6 +427,13 @@ public class ArchipelagoManager
         {
             _deathLinkService.EnableDeathLink();
         }
+
+        if (TrapLinkActive)
+        {
+            _session.ConnectionInfo.UpdateConnectionOptions(_session.ConnectionInfo.Tags.Concat(new string[1] { "TrapLink" }).ToArray());
+        }
+
+        this.AddItemsRcvCallback($"C64_Rcv_{_session.ConnectionInfo.Team}_{_session.Players.GetPlayerName(this.Slot)}", ItemsRcvUpdated);
 
         // TODO: Wrap this and only do if active
         AddPlayerListCallback($"C64_OtherPlayers_List", PlayerListUpdated);
@@ -439,7 +491,7 @@ public class ArchipelagoManager
         DeathsCounted = 0;
 
         // Log our current time so we can make sure we ignore our own DeathLink.
-        _lastDeath = DateTime.Now;
+        _lastDeath = DateTime.UtcNow;
         cause = $"{_session.Players.GetPlayerAlias(Slot)} {cause}.";
 
         try
@@ -464,7 +516,7 @@ public class ArchipelagoManager
 
         try
         {
-            _session.Locations.CompleteLocationChecks(locations);
+            _session.Locations.CompleteLocationChecksAsync(locations);
         }
         catch (ArchipelagoSocketClosedException)
         {
@@ -596,19 +648,29 @@ public class ArchipelagoManager
 
     public void CheckReceivedItemQueue()
     {
+        if (this.ServerItemsRcv < 0)
+        {
+            this.ServerItemsRcv = this.GetInt($"C64_Rcv_{_session.ConnectionInfo.Team}_{_session.Players.GetPlayerName(this.Slot)}");
+            return;
+        }
+
         int audioGuard = 0;
         for (int index = Save.CurrentRecord.GetFlag("ItemRcv"); index < ItemQueue.Count; index++)
         {
             var item = ItemQueue[index].Item2;
 
-            if (audioGuard < 3)
-            {
-                audioGuard++;
-                Audio.Play(Sfx.sfx_secret);
-            }
-
             Log.Info($"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}.");
-            MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}."));
+
+            if (index >= this.ServerItemsRcv && !(item.ItemId >= 0xCA0030 && item.ItemId < 0xCA0040))
+            {
+                if (audioGuard < 3)
+                {
+                    audioGuard++;
+                    Audio.Play(Sfx.sfx_secret);
+                }
+
+                MessageLog.Add(new ArchipelagoMessage($"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}."));
+            }
 
             if (item.ItemId == 0xCA0000)
             {
@@ -668,8 +730,22 @@ public class ArchipelagoManager
                 string internalName = "Item_" + CheckpointAPToInternal[checkpointStr];
                 Save.CurrentRecord.SetFlag(internalName);
             }
+            else if (item.ItemId >= 0xCA0030 && item.ItemId < 0xCA0040)
+            {
+                if (index >= this.ServerItemsRcv)
+                {
+                    string prettyMessage = $"Received {ItemIDToString[item.ItemId]} from {GetPlayerName(item.Player)}.";
+                    TrapManager.Instance.AddTrapToQueue((TrapType)(item.ItemId - 0xCA0000), prettyMessage);
+                }
+            }
 
             Save.CurrentRecord.SetFlag("ItemRcv", index + 1);
+        }
+
+        if (Save.CurrentRecord.GetFlag("ItemRcv") > this.ServerItemsRcv)
+        {
+            this.ServerItemsRcv = Save.CurrentRecord.GetFlag("ItemRcv");
+            this.Set($"C64_Rcv_{_session.ConnectionInfo.Team}_{_session.Players.GetPlayerName(this.Slot)}", Save.CurrentRecord.GetFlag("ItemRcv"));
         }
     }
 
@@ -767,6 +843,72 @@ public class ArchipelagoManager
         }
     }
 
+    public void HandleLiterature(Batcher batch, SpriteFont font, Rect bounds)
+    {
+        for (int i = Math.Min(Math.Max(2, LiteratureLog.Count - 1), 2); i >= 0; i--)
+        {
+            if (LiteratureLog.Count > i)
+            {
+                batch.Text(font, Game.Instance.ArchipelagoManager.LiteratureLog[i].Text, 1900.0f, bounds.TopCenter, new Vec2(0.5f, -(i + 1)), new Foster.Framework.Color(0xF5, 0x42, 0xC8, 0xFF));
+                ArchipelagoMessage updatedMessage = Game.Instance.ArchipelagoManager.LiteratureLog[i];
+                updatedMessage.RemainingTime -= 1;
+                if (updatedMessage.RemainingTime <= 0)
+                {
+                    Game.Instance.ArchipelagoManager.LiteratureLog.RemoveAt(i);
+                }
+                else
+                {
+                    Game.Instance.ArchipelagoManager.LiteratureLog[i] = updatedMessage;
+                }
+            }
+        }
+    }
+
+    public void AddItemsRcvCallback(string key, Action<int> callback)
+    {
+        if (!ItemRcvCallbackSet)
+        {
+            ItemRcvCallbackSet = true;
+            _session.DataStorage[key].OnValueChanged += (oldData, newData, _) => {
+                int newItemsRcv = JsonConvert.DeserializeObject<int>(newData.ToString());
+                callback(newItemsRcv);
+            };
+        }
+    }
+
+    public void ItemsRcvUpdated(int newItemsRcv)
+    {
+        this.ServerItemsRcv = newItemsRcv;
+    }
+
+    public void SendTrapLink(TrapType trapType)
+    {
+        try
+        {
+            if (!this.Ready || !this.TrapLinkActive)
+            {
+                return;
+            }
+
+            BouncePacket bouncePacket = new BouncePacket
+            {
+                Tags = new List<string> { "TrapLink" },
+                Data = new Dictionary<string, JToken>
+                    {
+                        { "time", DateTime.UtcNow.ToUnixTimeStamp() },
+                        { "source", GetPlayerName(this.Slot) },
+                        { "trap_name", ItemIDToString[0xCA0000 + (int)trapType] }
+                    }
+            };
+
+            _session.Socket.SendPacketAsync(bouncePacket);
+        }
+        catch (ArchipelagoSocketClosedException)
+        {
+            Disconnect();
+        }
+    }
+
     #region Multiplayer
     public Dictionary<string, AltPlayer> OtherPlayers = new Dictionary<string, AltPlayer> { };
     public Dictionary<string, OtherPlayerData> otherPlayersData = [];
@@ -775,7 +917,6 @@ public class ArchipelagoManager
 
     private bool listCallbackSet = false;
     public bool addedOurNameToList = false;
-    public bool GhostPlayersActive => _connectionInfo.SeeGhosts;
 
     public struct OtherPlayerData
     {
@@ -783,6 +924,7 @@ public class ArchipelagoManager
         public string Sublevel;
         public Vector2 Facing;
         public Vector3 Position;
+        public int HairLength;
         public string HairColor;
         public string Timestamp;
 
@@ -792,6 +934,7 @@ public class ArchipelagoManager
                 this.Sublevel == otherData.Sublevel &&
                 (Vector2.Distance(this.Facing, otherData.Facing) < 0.1f) &&
                 (Vector3.Distance(this.Position, otherData.Position) < 0.1f) &&
+                this.HairLength == otherData.HairLength &&
                 this.HairColor == otherData.HairColor)
             {
                 return true;
@@ -829,9 +972,32 @@ public class ArchipelagoManager
 
     private void OnPacketReceived(ArchipelagoPacketBase packet)
     {
-        if (packet.PacketType == ArchipelagoPacketType.Retrieved)
+        if (packet.PacketType == ArchipelagoPacketType.Bounced)
         {
-            if (_connectionInfo.SeeGhosts)
+            BouncedPacket bouncedPacket = packet as BouncedPacket;
+
+            if (bouncedPacket.Tags.Contains("TrapLink") && this.TrapLinkActive && bouncedPacket.Data["source"].ToString() != GetPlayerName(this.Slot))
+            {
+                string trap_name = bouncedPacket.Data["trap_name"].ToString();
+
+                if (TrapManager.TrapLinkNames.ContainsKey(trap_name))
+                {
+                    string message = $"Received Linked {trap_name} from {bouncedPacket.Data["source"].ToString()}.";
+
+                    TrapType type = TrapManager.TrapLinkNames[trap_name];
+
+                    if (TrapManager.EnabledTraps[(int)(type)] == 0)
+                    {
+                        return;
+                    }
+
+                    TrapManager.Instance.SetPriorityTrap(type, message);
+                }
+            }
+        }
+        else if (packet.PacketType == ArchipelagoPacketType.Retrieved)
+        {
+            if (Save.Instance.GhostPlayersActive)
             {
                 RetrievedPacket retPacket = packet as RetrievedPacket;
 
@@ -860,6 +1026,38 @@ public class ArchipelagoManager
                 List<string> otherPlayers = JsonConvert.DeserializeObject<List<string>>(newData.ToString());
                 callback(otherPlayers);
             };
+        }
+    }
+
+    public int GetInt(string key)
+    {
+        try
+        {
+            if (!_session.DataStorage[key])
+            {
+                return 0;
+            }
+
+            return _session.DataStorage[key];
+        }
+        catch (ArchipelagoSocketClosedException)
+        {
+            Disconnect();
+        }
+
+        return 0;
+    }
+
+    public void Set(string key, int value)
+    {
+        try
+        {
+            var token = JToken.FromObject(value);
+            _session.DataStorage[key] = token;
+        }
+        catch (ArchipelagoSocketClosedException)
+        {
+            Disconnect();
         }
     }
 

@@ -1,4 +1,5 @@
 using System.Runtime.InteropServices;
+using static Celeste64.Menu;
 
 namespace Celeste64;
 
@@ -28,7 +29,7 @@ public class Hair : Model
 		Utils.CreateSphere(sphereVertices, sphereIndices, 6, 6);
 		Materials.Add(new DefaultMaterial(Assets.Textures["white"]));
 		Origin = new Vec3(0, .8f, -.6f);
-		Nodes = 10;
+		Nodes = Player.CHairLength;
 	}
 
 	public void CopyState(Hair other)
@@ -54,6 +55,11 @@ public class Hair : Model
 		wave += Time.Delta * 4.0f;
 		OffsetPerNode = Forward * ForwardOffsetPerNode + new Vec3(0, 0, -1 * (1 - Roundness));
 		Origin = new Vec3(0, 1.0f, -.4f);
+
+		if (Nodes <= 0)
+		{
+			Nodes = 10;
+		}
 
 		while (nodes.Count > Nodes)
 			nodes.RemoveAt(nodes.Count - 1);

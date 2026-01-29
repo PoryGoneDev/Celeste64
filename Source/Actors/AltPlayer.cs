@@ -5,84 +5,86 @@ namespace Celeste64;
 
 /// <summary>
 /// </summary>
-public class AltPlayer : Actor, IHaveModels, ICastPointShadow
+public class AltPlayer : Actor, IHaveModels, ICastPointShadow, IPickup
 {
-	public string Name = "";
-	public Vec3 ModelScale = Vec3.One;
-	public SkinnedModel Model;
-	public readonly Hair Hair = new();
-	public float PointShadowAlpha { get; set; } = 1.0f;
-	public DateTime TimestampLastMoved = DateTime.MinValue;
+    public string Name = "";
+    public Vec3 ModelScale = Vec3.One;
+    public SkinnedModel Model;
+    public readonly Hair Hair = new();
+    public float PointShadowAlpha { get; set; } = 1.0f;
+    public DateTime TimestampLastMoved = DateTime.MinValue;
 
-	public AltPlayer()
+    public float PickupRadius => 9;
+
+    public AltPlayer()
     {
         PointShadowAlpha = 1.0f;
-		LocalBounds = new BoundingBox(new Vec3(0, 0, 10), 10);
-		UpdateOffScreen = true;
+        LocalBounds = new BoundingBox(new Vec3(0, 0, 10), 10);
+        UpdateOffScreen = true;
 
 
-		// setup model
-		{
-			Model = new(Assets.Models["player"]);
-			Model.SetBlendDuration("Idle", "Dash", 0.05f);
-			Model.SetBlendDuration("Idle", "Run", 0.2f);
-			Model.SetBlendDuration("Run", "Skid", .125f);
-			Model.SetLooping("Dash", false);
-			Model.Flags |= ModelFlags.Silhouette;
-			Model.Play("Idle");
+        // setup model
+        {
+            Model = new(Assets.Models["player"]);
+            Model.SetBlendDuration("Idle", "Dash", 0.05f);
+            Model.SetBlendDuration("Idle", "Run", 0.2f);
+            Model.SetBlendDuration("Run", "Skid", .125f);
+            Model.SetLooping("Dash", false);
+            Model.Flags |= ModelFlags.Silhouette;
+            Model.Play("Idle");
 
-			Model.MakeMaterialsUnique();
+            Model.MakeMaterialsUnique();
 
-			foreach (var mat in Model.Materials)
-				mat.Effects = 0.60f;
-		}
+            foreach (var mat in Model.Materials)
+                mat.Effects = 0.60f;
+        }
 
-		SetHairColor(0xdb2c00);
-	}
-
-
-	public override void LateUpdate()
-	{
-		// update model
-		{
-			Calc.Approach(ref ModelScale.X, 1, Time.Delta / .8f);
-			Calc.Approach(ref ModelScale.Y, 1, Time.Delta / .8f);
-			Calc.Approach(ref ModelScale.Z, 1, Time.Delta / .8f);
-
-			Model.Update();
-			Model.Transform = Matrix.CreateScale(ModelScale * 3);
-		}
-
-		// hair
-		{
-			var hairMatrix = Matrix.Identity;
-
-			foreach (var it in Model.Instance.Armature.LogicalNodes)
-			{
-				if (it.Name == "Head")
-				{
-					hairMatrix = it.ModelMatrix * SkinnedModel.BaseTranslation * Model.Transform * Matrix;
-				}
-			}
-
-			Hair.Flags = Model.Flags;
-			Hair.Forward = -new Vec3(Facing, 0);
-			Hair.Squish = ModelScale;
-			Hair.Materials[0].Effects = 0;
-			Hair.Update(hairMatrix);
-		}
-	}
+        SetHairColor(0xdb2c00);
+    }
 
 
-	public void CollectModels(List<(Actor Actor, Model Model)> populate)
-	{
-		if ((World.Camera.Position - (Position + Vec3.UnitZ * 8)).LengthSquared() > World.Camera.NearPlane * World.Camera.NearPlane)
-		{
-			populate.Add((this, Hair));
+    public override void LateUpdate()
+    {
+        // update model
+        {
+            Calc.Approach(ref ModelScale.X, 1, Time.Delta / .8f);
+            Calc.Approach(ref ModelScale.Y, 1, Time.Delta / .8f);
+            Calc.Approach(ref ModelScale.Z, 1, Time.Delta / .8f);
 
-			populate.Add((this, Model));
-		}
-	}
+            Model.Update();
+            Model.Transform = Matrix.CreateScale(ModelScale * 3);
+        }
+
+        // hair
+        {
+            var hairMatrix = Matrix.Identity;
+
+            foreach (var it in Model.Instance.Armature.LogicalNodes)
+            {
+                if (it.Name == "Head")
+                {
+                    hairMatrix = it.ModelMatrix * SkinnedModel.BaseTranslation * Model.Transform * Matrix;
+                }
+            }
+
+            Hair.Flags = Model.Flags;
+            Hair.Forward = -new Vec3(Facing, 0);
+            Hair.Squish = ModelScale;
+            Hair.Materials[0].Effects = 0;
+            Hair.Update(hairMatrix);
+        }
+    }
+
+
+    public void CollectModels(List<(Actor Actor, Model Model)> populate)
+    {
+        if ((World.Camera.Position - (Position + Vec3.UnitZ * 8)).LengthSquared() > World.Camera.NearPlane * World.Camera.NearPlane)
+        {
+            populate.Add((this, Hair));
+
+            populate.Add((this, Model));
+        }
+    }
 
     public void SetHairColor(Color color)
     {
@@ -97,6 +99,13 @@ public class AltPlayer : Actor, IHaveModels, ICastPointShadow
         }
 
         Hair.Color = color;
-        Hair.Nodes = 10;
+    }
+
+    public void Pickup(Player player)
+    {
+        if (!Game.Instance.IsMidTransition && player.InvincibilityFrames <= 0 && Save.Instance.DieToGhostPlayers)
+        {
+            player.Kill();
+        }
     }
 }

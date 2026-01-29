@@ -91,10 +91,20 @@ public class Save
 	/// </summary>
 	public string Language { get; set; } = "english";
 
-	/// <summary>
-	/// Records for each level
-	/// </summary>
-	public List<LevelRecord> Records { get; set; } = [];
+    /// <summary>
+    /// If you should see ghosts of other players in your multiworld
+    /// </summary>
+    public bool GhostPlayersActive { get; set; } = true;
+
+    /// <summary>
+    /// If you should die upon touching ghosts of other players in your multiworld
+    /// </summary>
+    public bool DieToGhostPlayers { get; set; } = false;
+
+    /// <summary>
+    /// Records for each level
+    /// </summary>
+    public List<LevelRecord> Records { get; set; } = [];
 
 	/// <summary>
 	/// Finds the record associated with a specific level, or adds it if not found
@@ -173,9 +183,21 @@ public class Save
 	{
 		SfxVolume = Calc.Clamp(value, 0, 10);
 		SyncSettings();
-	}
+    }
 
-	public void SyncSettings()
+    public void ShowGhosts()
+    {
+        GhostPlayersActive = !GhostPlayersActive;
+        SyncSettings();
+    }
+
+    public void DieToGhosts()
+    {
+        DieToGhostPlayers = !DieToGhostPlayers;
+        SyncSettings();
+    }
+
+    public void SyncSettings()
 	{
 		App.Fullscreen = Fullscreen;
 		Foster.Framework.Input.FocusRequired = !BackgroundInput;
