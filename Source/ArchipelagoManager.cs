@@ -382,9 +382,12 @@ public class ArchipelagoManager
         Carsanity             = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("carsanity", out value)                  ? value : false);
 
         MoveShuffle           = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("move_shuffle", out value)               ? value : false);
-        CassetteMap           = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["cassette_map"].ToString());
 
-        if (CassetteMap is null)
+        try
+        {
+            CassetteMap = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["cassette_map"].ToString());
+        }
+        catch
         {
             CassetteMap = new Dictionary<int, int>()
             {
@@ -414,9 +417,12 @@ public class ArchipelagoManager
         DeathLinkAmnesty      = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("death_link_amnesty", out value)           ? value : 10);
         bool DeathLinkEnabled = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("death_link", out value)                 ? value : false);
 
-        TrapManager.ExpirationAmount = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("trap_expiration_amount", out value) ? value : 5);
         TrapLinkActive               = Convert.ToBoolean(((LoginSuccessful)result).SlotData.TryGetValue("trap_link", out value) ? value : false);
-        TrapManager.EnabledTraps     = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["active_traps"].ToString());
+        TrapManager.ExpirationAmount = Convert.ToInt32(((LoginSuccessful)result).SlotData.TryGetValue("trap_expiration_amount", out value) ? value : 5);
+        if (TrapLinkActive)
+        {
+          TrapManager.EnabledTraps = Newtonsoft.Json.JsonConvert.DeserializeObject<Dictionary<int, int>>(((LoginSuccessful)result).SlotData["active_traps"].ToString());
+        }
 
         Checkpointsanity = ((LoginSuccessful)result).SlotData.TryGetValue("checkpointsanity", out value) ? Convert.ToBoolean(value) : null;
 
@@ -986,7 +992,7 @@ public class ArchipelagoManager
 
                     TrapType type = TrapManager.TrapLinkNames[trap_name];
 
-                    if (TrapManager.EnabledTraps[(int)(type)] == 0)
+                    if (!TrapManager.EnabledTraps.ContainsKey((int)(type)) || TrapManager.EnabledTraps[(int)(type)] == 0)
                     {
                         return;
                     }
